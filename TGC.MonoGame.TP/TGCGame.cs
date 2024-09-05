@@ -1,6 +1,5 @@
 ﻿﻿using System;
 using Microsoft.Xna.Framework;
-using Models.Primitives;
 //using Models.Obstacles;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -26,16 +25,14 @@ namespace TGC.MonoGame.TP
         /// </summary>
         public TGCGame()
         {
-            // Maneja la configuracion y la administracion del dispositivo grafico.
+
             Graphics = new GraphicsDeviceManager(this);
             
             Graphics.PreferredBackBufferWidth = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Width - 100;
             Graphics.PreferredBackBufferHeight = GraphicsAdapter.DefaultAdapter.CurrentDisplayMode.Height - 100;
-            
-            // Para que el juego sea pantalla completa se puede usar Graphics IsFullScreen.
-            // Carpeta raiz donde va a estar toda la Media.
+
             Content.RootDirectory = "Content";
-            // Hace que el mouse sea visible.
+        
             IsMouseVisible = true;
         }
 
@@ -47,21 +44,14 @@ namespace TGC.MonoGame.TP
         private Matrix World { get; set; }
         private Matrix View { get; set; }
         private Matrix Projection { get; set; }
+        //
+        private VertexBuffer VertexBuffer { get; set; }
+        private IndexBuffer IndexBuffer { get; set; }
 
-        private CubePrimitive Cube; 
-        private int FloorUnitHeight = 6;
 
-        /// <summary>
-        ///     Se llama una sola vez, al principio cuando se ejecuta el ejemplo.
-        ///     Escribir aqui el codigo de inicializacion: el procesamiento que podemos pre calcular para nuestro juego.
-        /// </summary>
         protected override void Initialize()
         {
-            // La logica de inicializacion que no depende del contenido se recomienda poner en este metodo.
 
-            // Apago el backface culling.
-            // Esto se hace por un problema en el diseno del modelo del logo de la materia.
-            // Una vez que empiecen su juego, esto no es mas necesario y lo pueden sacar.
             var rasterizerState = new RasterizerState();
             rasterizerState.CullMode = CullMode.None;
             GraphicsDevice.RasterizerState = rasterizerState;
@@ -76,23 +66,35 @@ namespace TGC.MonoGame.TP
             base.Initialize();
         }
 
-        /// <summary>
-        ///     Se llama una sola vez, al principio cuando se ejecuta el ejemplo, despues de Initialize.
-        ///     Escribir aqui el codigo de inicializacion: cargar modelos, texturas, estructuras de optimizacion, el procesamiento
-        ///     que podemos pre calcular para nuestro juego.
-        /// </summary>
         protected override void LoadContent()
         {
             // Aca es donde deberiamos cargar todos los contenido necesarios antes de iniciar el juego.
             SpriteBatch = new SpriteBatch(GraphicsDevice);
 
             // Cargo el modelo del logo
-            Cube = new CubePrimitive(GraphicsDevice);
+
 
 
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
 
+            VertexBuffer = new VertexBuffer(GraphicsDevice , typeof(VertexPositionColor),3,BufferUsage.None);
+            var vertices = new VertexPositionColor[]
+            {
+                new VertexPositionColor(Vector3.Up, Color.Red),
+                new VertexPositionColor(Vector3.Left, Color.Red),
+                new VertexPositionColor(Vector3.Right, Color.Red),
+                new VertexPositionColor(Vector3.Down, Color.Red),
+               
+            };
+            VertexBuffer.SetData(vertices);
+
+            IndexBuffer= new IndexBuffer(GraphicsDevice, IndexElementSize.SixteenBits,4,BufferUsage.None);
+
             
+            var indices = new ushort[] { 0 , 1 , 2 , 3 };
+
+            IndexBuffer.SetData(indices);
+
             // Un modelo puede tener mas de 1 mesh internamente.
             /*foreach (var mesh in Model.Meshes)
             {
@@ -126,10 +128,6 @@ namespace TGC.MonoGame.TP
             base.Update(gameTime);
         }
 
-        /// <summary>
-        ///     Se llama cada vez que hay que refrescar la pantalla.
-        ///     Escribir aqui el codigo referido al renderizado.
-        /// </summary>
         protected override void Draw(GameTime gameTime)
         {
             // Aca deberiamos poner toda la logia de renderizado del juego.
@@ -139,28 +137,18 @@ namespace TGC.MonoGame.TP
             Effect.Parameters["View"].SetValue(View);
             Effect.Parameters["Projection"].SetValue(Projection);
             Effect.Parameters["DiffuseColor"].SetValue(Color.DarkBlue.ToVector3());
+       
+            GraphicsDevice.Indices = IndexBuffer;
+            GraphicsDevice.SetVertexBuffer(VertexBuffer);
+            Effect.Parameters["World"].SetValue(Matrix.Identity);
 
-            Matrix initial_floor = Matrix.Identity;
-            for (int i = 0; i < 10; i++) {
-            Matrix floor_world =
-                Matrix.CreateScale(FloorUnitHeight) *
-                Matrix.CreateTranslation(new Vector3(
-                    0, -PlayerRadius - (FloorUnitHeight) / 2, i * FloorUnitHeight)) *
-                initial_floor;
-            Effect.Parameters["World"].SetValue(floor_world);
-            Cube.Draw(Effect);
-    }
-            /*
-            foreach (var mesh in Model.Meshes)
+            foreach (var passes in Effect.CurrentTechnique.Passes)
             {
-                Effect.Parameters["World"].SetValue(mesh.ParentBone.Transform * World);
-                mesh.Draw();
-            }*/
-        }
+                passes.Apply();
 
-        /// <summary>
-        ///     Libero los recursos que se cargaron en el juego.
-        /// </summary>
+                GraphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList,0,0,2);
+            }
+        }
         protected override void UnloadContent()
         {
             // Libero los recursos.
