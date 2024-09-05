@@ -98,6 +98,7 @@ namespace TGC.MonoGame.TP
                     meshPart.Effect = Effect;
                 }
             }
+            RAMIRO
 
             base.LoadContent();
         }
