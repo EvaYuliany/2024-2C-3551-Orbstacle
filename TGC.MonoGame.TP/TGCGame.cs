@@ -1,7 +1,7 @@
 ﻿﻿using System;
 using Microsoft.Xna.Framework;
 using Models.Primitives;
-using Models.Obstacles;
+//using Models.Obstacles;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -49,6 +49,7 @@ namespace TGC.MonoGame.TP
         private Matrix Projection { get; set; }
 
         private CubePrimitive Cube; 
+        private int FloorUnitHeight = 6;
 
         /// <summary>
         ///     Se llama una sola vez, al principio cuando se ejecuta el ejemplo.
