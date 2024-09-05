@@ -1,5 +1,7 @@
-﻿using System;
+﻿﻿using System;
 using Microsoft.Xna.Framework;
+using Models.Primitives;
+using Models.Obstacles;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
@@ -46,6 +48,8 @@ namespace TGC.MonoGame.TP
         private Matrix View { get; set; }
         private Matrix Projection { get; set; }
 
+        private CubePrimitive Cube; 
+
         /// <summary>
         ///     Se llama una sola vez, al principio cuando se ejecuta el ejemplo.
         ///     Escribir aqui el codigo de inicializacion: el procesamiento que podemos pre calcular para nuestro juego.
@@ -89,6 +93,7 @@ namespace TGC.MonoGame.TP
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
 
             // Asigno el efecto que cargue a cada parte del mesh.
+            Cube = new CubePrimitive(GraphicsDevice);
             // Un modelo puede tener mas de 1 mesh internamente.
             foreach (var mesh in Model.Meshes)
             {
@@ -98,7 +103,6 @@ namespace TGC.MonoGame.TP
                     meshPart.Effect = Effect;
                 }
             }
-            RAMIRO
 
             base.LoadContent();
         }
@@ -141,11 +145,22 @@ namespace TGC.MonoGame.TP
             Effect.Parameters["Projection"].SetValue(Projection);
             Effect.Parameters["DiffuseColor"].SetValue(Color.DarkBlue.ToVector3());
 
+            Matrix initial_floor = Matrix.Identity;
+            for (int i = 0; i < 10; i++) {
+            Matrix floor_world =
+                Matrix.CreateScale(FloorUnitHeight) *
+                Matrix.CreateTranslation(new Vector3(
+                    0, -PlayerRadius - (FloorUnitHeight) / 2, i * FloorUnitHeight)) *
+                initial_floor;
+            Effect.Parameters["World"].SetValue(floor_world);
+            Cube.Draw(Effect);
+    }
+            /*
             foreach (var mesh in Model.Meshes)
             {
                 Effect.Parameters["World"].SetValue(mesh.ParentBone.Transform * World);
                 mesh.Draw();
-            }
+            }*/
         }
 
         /// <summary>
