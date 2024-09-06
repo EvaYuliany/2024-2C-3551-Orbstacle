@@ -70,6 +70,8 @@ namespace TGC.MonoGame.TP
         private float Pitch { get; set; }
         private float Roll { get; set; }
 
+        private float FloorGetX(float z) { return 4 * MathF.Sin(z); }
+
         protected override void Initialize()
         {
             var rasterizerState = new RasterizerState();
@@ -194,14 +196,11 @@ namespace TGC.MonoGame.TP
             Sphere.Draw(Effect);
 
             Effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
-            Matrix initial_floor = Matrix.Identity;
-            for (int i = 0; i < 10; i++)
+            for (float z = 0; z < 100; z += 3f)
             {
-                Matrix floor_world =
-                    Matrix.CreateScale(FloorUnitHeight) *
-                    Matrix.CreateTranslation(new Vector3(
-                        0, -PlayerRadius - (FloorUnitHeight) / 2, i * FloorUnitHeight)) *
-                    initial_floor;
+                Matrix floor_world = Matrix.CreateScale(FloorUnitHeight) *
+                                     Matrix.CreateTranslation(new Vector3(
+                                         2 * FloorGetX(z), -FloorUnitHeight / 2-PlayerRadius, z));
                 Effect.Parameters["World"].SetValue(floor_world);
                 Cube.Draw(Effect);
             }
