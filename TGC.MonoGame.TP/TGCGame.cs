@@ -232,10 +232,11 @@ namespace TGC.MonoGame.TP
         {
             GraphicsDevice.Clear(Color.Black);
              // Dibuja el modelo de la nave espacial
+             //todo
             Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(new Vector3(0, 0, 30))); // Ajusta la posición si es necesario
             SpaceShipModel.Draw(Effect);
             SpaceShipModel.Draw(Effect);
-            
+
             DrawGeometry(teapot, new Vector3(2, 0, 10), Yaw, -Pitch, Roll);
 
             Effect.Parameters["World"].SetValue(PlayerWorld);
