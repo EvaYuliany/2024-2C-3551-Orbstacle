@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.TP.Geometries;
 using TGC.MonoGame.TP.Obstacles;
+using System.Collections.Generic;
 
 namespace TGC.MonoGame.TP
 {
@@ -15,7 +16,6 @@ namespace TGC.MonoGame.TP
         public const string ContentFolderSounds = "Sounds/";
         public const string ContentFolderSpriteFonts = "SpriteFonts/";
         public const string ContentFolderTextures = "Textures/";
-
         public TGCGame()
         {
             Graphics = new GraphicsDeviceManager(this);
@@ -37,8 +37,11 @@ namespace TGC.MonoGame.TP
 
         private float CameraAngle = -MathF.PI / 2;
         private float CameraRotationSpeed = 5f;
-        private float CameraDistanceToPlayer = 7f;
+        private float CameraDistanceToPlayer = 15f;
         private float CameraUpAngle = 0;
+        private int numberOfCubes = 20;
+        private List<Vector3> cubePositions;
+        private Random random;
         private Vector3 GetCameraPosition(float angle)
         {
             return new Vector3(MathF.Cos(angle) * CameraDistanceToPlayer, 3,
@@ -84,6 +87,20 @@ namespace TGC.MonoGame.TP
             Projection = Matrix.CreatePerspectiveFieldOfView(
                 MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 250);
 
+
+        random = new Random();
+        cubePositions = new List<Vector3>();
+
+        for (int i = 0; i < numberOfCubes; i++)
+        {
+            // Generar posiciones aleatorias dentro de un rango (por ejemplo, en un área 100x100x100)
+            var randomPosition = new Vector3(
+                (float)(random.NextDouble() * 100 - 50),  // X
+                (float)(random.NextDouble() * 10),        // Y
+                (float)(random.NextDouble() * 100 - 50)   // Z
+            );
+            cubePositions.Add(randomPosition);
+        }
             base.Initialize();
         }
 
@@ -231,6 +248,12 @@ namespace TGC.MonoGame.TP
             cylinderEffect.Projection = Projection;
 
             cylinder.Draw(cylinderEffect);
+
+            foreach (var position in cubePositions) {
+                Matrix worldMatrix = Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
+                Effect.Parameters["World"].SetValue(worldMatrix);
+                Cube.Draw(Effect);
+            }
         }
 
         private void DrawGeometry(GeometricPrimitive geometry, Vector3 position,
