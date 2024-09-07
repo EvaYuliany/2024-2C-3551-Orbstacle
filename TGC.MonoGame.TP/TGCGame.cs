@@ -77,6 +77,7 @@ namespace TGC.MonoGame.TP
         private float Yaw { get; set; }
         private float Pitch { get; set; }
         private float Roll { get; set; }
+        private SpaceShipPrimitive SpaceShipModel;
 
         private float FloorGetX(float z) { return 4 * MathF.Sin(z); }
 
@@ -158,6 +159,9 @@ namespace TGC.MonoGame.TP
                 new Pendulum(Cylinder, Sphere, new Vector3(0, 5, 0), 0, 0, MathF.PI * 2,
                              0, 7, 5, Color.Gray, Color.Orange, 1.5f);
 
+            SpaceShipModel = new SpaceShipPrimitive(GraphicsDevice); // Aquí creas la instancia del modelo de nave
+
+
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
 
             base.LoadContent();
@@ -227,6 +231,11 @@ namespace TGC.MonoGame.TP
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
+             // Dibuja el modelo de la nave espacial
+            Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(new Vector3(0, 0, 30))); // Ajusta la posición si es necesario
+            SpaceShipModel.Draw(Effect);
+            SpaceShipModel.Draw(Effect);
+            
             DrawGeometry(teapot, new Vector3(2, 0, 10), Yaw, -Pitch, Roll);
 
             Effect.Parameters["World"].SetValue(PlayerWorld);
@@ -288,6 +297,9 @@ namespace TGC.MonoGame.TP
               Effect.Parameters["DiffuseColor"].SetValue(color.ToVector3()); // Usar el color aleatorio
               Sphere.Draw(Effect);
           }
+
+         
+
         }
 
         private void DrawGeometry(GeometricPrimitive geometry, Vector3 position,
