@@ -41,6 +41,11 @@ namespace TGC.MonoGame.TP
         private float CameraUpAngle = 0;
         private int numberOfCubes = 20;
         private List<Vector3> cubePositions;
+        private List<Vector3> spherePositions;
+        private List<Color> sphereColors;
+
+        private int numberOfSpheres = 20;
+
         private Random random;
         private Vector3 GetCameraPosition(float angle)
         {
@@ -90,9 +95,8 @@ namespace TGC.MonoGame.TP
 
         random = new Random();
         cubePositions = new List<Vector3>();
-
-        for (int i = 0; i < numberOfCubes; i++)
-        {
+        sphereColors = new List<Color>(); 
+        for (int i = 0; i < numberOfCubes; i++) {
             // Generar posiciones aleatorias dentro de un rango (por ejemplo, en un área 100x100x100)
             var randomPosition = new Vector3(
                 (float)(random.NextDouble() * 100 - 50),  // X
@@ -100,6 +104,25 @@ namespace TGC.MonoGame.TP
                 (float)(random.NextDouble() * 100 - 50)   // Z
             );
             cubePositions.Add(randomPosition);
+        }
+        spherePositions = new List<Vector3>();
+
+        for (int i = 0; i < numberOfSpheres; i++){
+            // Generar posiciones aleatorias dentro de un rango
+            var randomPosition = new Vector3(
+                (float)(random.NextDouble() * 100 - 50),  // X
+                (float)(random.NextDouble() * 10),        // Y
+                (float)(random.NextDouble() * 130 - 50)   // Z
+            );
+            
+            spherePositions.Add(randomPosition);
+            // Generar color aleatorio
+            var randomColor = new Color(
+                (float)random.NextDouble(), // R
+                (float)random.NextDouble(), // G
+                (float)random.NextDouble()  // B
+            );
+            sphereColors.Add(randomColor);
         }
             base.Initialize();
         }
@@ -254,6 +277,17 @@ namespace TGC.MonoGame.TP
                 Effect.Parameters["World"].SetValue(worldMatrix);
                 Cube.Draw(Effect);
             }
+
+          for (int i = 0; i < spherePositions.Count; i++)
+          {
+              var position = spherePositions[i];
+              var color = sphereColors[i];
+
+              Matrix worldMatrix = Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
+              Effect.Parameters["World"].SetValue(worldMatrix);
+              Effect.Parameters["DiffuseColor"].SetValue(color.ToVector3()); // Usar el color aleatorio
+              Sphere.Draw(Effect);
+          }
         }
 
         private void DrawGeometry(GeometricPrimitive geometry, Vector3 position,
