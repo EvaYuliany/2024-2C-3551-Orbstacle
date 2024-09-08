@@ -23,7 +23,7 @@ namespace TGC.MonoGame.TP.Geometries
     /// </summary>
     public class CubePrimitive : GeometricPrimitive
     {
-        public CubePrimitive(GraphicsDevice graphicsDevice) : this(graphicsDevice, 1, Color.White, Color.White,
+        public CubePrimitive(GraphicsDevice graphicsDevice) : this(graphicsDevice, 3, Color.White, Color.White,
             Color.White, Color.White, Color.White, Color.White)
         {
         }
