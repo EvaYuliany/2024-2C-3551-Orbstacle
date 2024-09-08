@@ -42,6 +42,7 @@ namespace TGC.MonoGame.TP
         private int numberOfCubes = 20;
         private List<Vector3> cubePositions;
         private List<Vector3> spherePositions;
+        private List<Matrix> FloorWorld;
         private List<Color> sphereColors;
 
         private int numberOfSpheres = 20;
@@ -72,14 +73,12 @@ namespace TGC.MonoGame.TP
         private TrianglePrimitive triangle;
 
         private int PlayerRadius = 1;
-        private int FloorUnitHeight = 6;
+        private int FloorUnit = 6;
 
         private float Yaw { get; set; }
         private float Pitch { get; set; }
         private float Roll { get; set; }
         private SpaceShipPrimitive SpaceShipModel;
-
-        private float FloorGetX(float z) { return 4 * MathF.Sin(z); }
 
         protected override void Initialize()
         {
@@ -107,6 +106,18 @@ namespace TGC.MonoGame.TP
             cubePositions.Add(randomPosition);
         }
         spherePositions = new List<Vector3>();
+        FloorWorld = new List<Matrix>();
+
+            for (float t = 0; t > -100; t-=0.1f) {
+              FloorWorld.Add(
+                  Matrix.CreateScale(new Vector3 (FloorUnit,1,FloorUnit))*
+                  Matrix.CreateTranslation(
+                    new Vector3(
+                       20 * MathF.Cos(t),
+                        t* 2,
+                        20 * MathF.Sin(t)
+                      )));
+            }
 
         for (int i = 0; i < numberOfSpheres; i++){
             // Generar posiciones aleatorias dentro de un rango
@@ -246,14 +257,18 @@ namespace TGC.MonoGame.TP
             Sphere.Draw(Effect);
 
             Effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
-            for (float z = 0; z < 100; z += 3f)
-            {
-                Matrix floor_world = Matrix.CreateScale(FloorUnitHeight) *
-                                     Matrix.CreateTranslation(new Vector3(
-                                         2 * FloorGetX(z), -FloorUnitHeight / 2-PlayerRadius, z));
+            for (int i = 0; i < FloorWorld.Count; i++) {
+                Matrix floor_world = FloorWorld[i];
                 Effect.Parameters["World"].SetValue(floor_world);
                 Cube.Draw(Effect);
             }
+
+            Effect.Parameters["DiffuseColor"].SetValue(Color.Gray.ToVector3());
+                Effect.Parameters["World"].SetValue(
+                    Matrix.CreateScale(new Vector3(1000, 1 ,1000)) * 
+                    Matrix.CreateTranslation(-Vector3.UnitY)
+                    );
+                Cube.Draw(Effect);
 
             Effect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector3());
             Effect.Parameters["World"].SetValue(Matrix.Identity);
