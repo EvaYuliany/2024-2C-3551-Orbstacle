@@ -57,6 +57,7 @@ namespace TGC.MonoGame.TP
 
         private SpherePrimitive Sphere;
         private CubePrimitive Cube;
+        private BridgePrimitive Bridge;
         private CylinderPrimitive Cylinder;
         private PyramidPrimitive Pyramid;
         private TeapotPrimitive teapot;
@@ -151,6 +152,7 @@ namespace TGC.MonoGame.TP
 
         protected override void LoadContent()
         {
+            Bridge = new BridgePrimitive(GraphicsDevice, height: 0.1f, diameter: 2f, tessellation: 32);
             Sphere = new SpherePrimitive(GraphicsDevice);
             Cube = new CubePrimitive(GraphicsDevice);
             Cylinder = new CylinderPrimitive(GraphicsDevice);
@@ -254,6 +256,12 @@ namespace TGC.MonoGame.TP
             GraphicsDevice.Clear(Color.Black);
              // Dibuja el modelo de la nave espacial
              //todo
+            Bridge.Draw(Matrix.CreateTranslation(new Vector3(6, 0,8)), View, Projection);
+            Bridge.Draw(Matrix.CreateTranslation(new Vector3(30, 0,15)), View, Projection);
+            Bridge.Draw(Matrix.CreateTranslation(new Vector3(20, 0,45)), View, Projection);
+            Bridge.Draw(Matrix.CreateTranslation(new Vector3(50, 0,35)), View, Projection);
+            Bridge.Draw(Matrix.CreateTranslation(new Vector3(-10, 0,80)), View, Projection);
+            
             Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(new Vector3(2, 0,2))); // Ajusta la posición si es necesario
             SpaceShipModel.Draw(Effect);
             SpaceShipModel.Draw(Effect);
@@ -299,13 +307,29 @@ namespace TGC.MonoGame.TP
 
             Matrix rotation = Matrix.CreateRotationX(MathHelper.PiOver2);
 
-            cylinderEffect.World = rotation *
-                                   Matrix.CreateFromYawPitchRoll(Yaw, Pitch, Roll) *
-                                   Matrix.CreateTranslation(new Vector3(0, 0, 30));
+            cylinderEffect.World = rotation *  Matrix.CreateFromYawPitchRoll(Yaw, Pitch, Roll) *  Matrix.CreateTranslation(new Vector3(0, 0, 30));
             cylinderEffect.View = View;
             cylinderEffect.Projection = Projection;
+            cylinder.Draw(cylinderEffect);     
 
-            cylinder.Draw(cylinderEffect);
+            var cylinderEffect2 = cylinder.Effect;
+            cylinderEffect2.World = Matrix.CreateRotationX(MathHelper.PiOver2) *  Matrix.CreateFromYawPitchRoll(Yaw, Pitch, Roll) *  Matrix.CreateTranslation(new Vector3(15, 0, 70));
+            cylinderEffect2.View = View;
+            cylinderEffect2.Projection = Projection;
+            cylinder.Draw(cylinderEffect2);
+
+            var cylinderEffect3 = cylinder.Effect;
+            cylinderEffect3.World = Matrix.CreateRotationX(MathHelper.PiOver2) *  Matrix.CreateFromYawPitchRoll(Yaw, Pitch, Roll) *  Matrix.CreateTranslation(new Vector3(-20, 0, 100));
+            cylinderEffect3.View = View;
+            cylinderEffect3.Projection = Projection;
+            cylinder.Draw(cylinderEffect3);
+
+            var cylinderEffect4 = cylinder.Effect;
+            cylinderEffect4.World = Matrix.CreateRotationX(MathHelper.PiOver2) *  Matrix.CreateFromYawPitchRoll(Yaw, Pitch, Roll) *  Matrix.CreateTranslation(new Vector3(0, 0, 110));
+            cylinderEffect4.View = View;
+            cylinderEffect4.Projection = Projection;
+
+            cylinder.Draw(cylinderEffect4);
             /*
             foreach (var position in cubePositions) {
                 Matrix worldMatrix = Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
