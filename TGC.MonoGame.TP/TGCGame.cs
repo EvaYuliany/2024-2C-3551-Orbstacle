@@ -4,6 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.TP.Geometries;
 using TGC.MonoGame.TP.Obstacles;
+using TGC.MonoGame.TP.Objects;
 using System.Collections.Generic;
 
 namespace TGC.MonoGame.TP
@@ -34,157 +35,104 @@ namespace TGC.MonoGame.TP
         private Effect Effect;
         private Matrix View;
         private Matrix Projection;
+        private Player player;
+
+        private List<Vector3> cubePositions;
+        private List<Vector3> spherePositions;
+        private List<Color> sphereColors;
+        private List<Color> cubeColors;
 
         private float CameraAngle = -MathF.PI / 2;
         private float CameraRotationSpeed = 5f;
         private float CameraDistanceToPlayer = 15f;
         private float CameraUpAngle = 0;
-        private int numberOfCubes = 50;
-        private List<Vector3> cubePositions;
-        private List<Vector3> spherePositions;
-        private List<Matrix> FloorWorld;
-        private List<Color> sphereColors;
-        private List<Color> cubeColors;
-
-        private int numberOfSpheres = 50;
-
-        private Random random;
         private Vector3 GetCameraPosition(float angle)
         {
             return new Vector3(MathF.Cos(angle) * CameraDistanceToPlayer, 3,
                                MathF.Sin(angle) * CameraDistanceToPlayer);
         }
 
+        private Vector3 Gravity = Vector3.UnitY * 1f;
+
+        private int numberOfCubes = 50;
+        private int numberOfSpheres = 50;
+
+        private Random random;
+
         private SpherePrimitive Sphere;
+
         private CubePrimitive Cube;
-        private BridgePrimitive Bridge;
-        private CylinderPrimitive Cylinder;
-        private PyramidPrimitive Pyramid;
-        private TeapotPrimitive teapot;
-        private CylinderPrimitive cylinder;
-
-        private Vector3 PlayerPosition = Vector3.Zero;
-        private float PlayerSpeed = 4f;
-        private Matrix PlayerWorld;
-
-        private Elevator Elevator;
-        private Pendulum Pendulum;
-        private Pendulum Pendulum2;
-        private Pendulum Pendulum3;
-
-        private TrianglePrimitive triangle;
-
-        private int PlayerRadius = 1;
-        private int FloorUnit = 6;
-
-        private float Yaw { get; set; }
-        private float Pitch { get; set; }
-        private float Roll { get; set; }
-        private SpaceShipPrimitive SpaceShipModel;
+        private BoundingBox FloorBB;
+        private Matrix FloorWorld = Matrix.Identity;
+        private float FloorSize = 100f;
 
         protected override void Initialize()
         {
             var rasterizerState = new RasterizerState();
+            rasterizerState.FillMode = FillMode.WireFrame;
             rasterizerState.CullMode = CullMode.None;
             GraphicsDevice.RasterizerState = rasterizerState;
-            PlayerWorld = Matrix.Identity;
-            View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + PlayerPosition,
-                                       PlayerPosition + Vector3.UnitY * CameraUpAngle,
+            player = new Player(GraphicsDevice, Vector3.Zero, 4f, 1, Color.DarkBlue);
+            View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
+                                       player.Position + Vector3.UnitY * CameraUpAngle,
                                        Vector3.Up);
             Projection = Matrix.CreatePerspectiveFieldOfView(
                 MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 250);
 
-
-            random = new Random();
+            random = new Random(0);
             cubePositions = new List<Vector3>();
             cubeColors = new List<Color>();
-            sphereColors = new List<Color>(); 
-            for (int i = 0; i < numberOfCubes; i++) {
-                // Generar posiciones aleatorias dentro de un rango (por ejemplo, en un área 100x100x100)
-                var randomPosition = new Vector3(
-                    (float)(random.NextDouble() * 100 - 50),  // X
-                    (float)(random.NextDouble() * 10),        // Y
-                    (float)(random.NextDouble() * 100 - 50)   // Z
-                );
+            sphereColors = new List<Color>();
+            for (int i = 0; i < numberOfCubes; i++)
+            {
+                // Generar posiciones aleatorias dentro de un rango (por ejemplo, en un
+                // área 100x100x100)
+                var randomPosition =
+                    new Vector3((float)(random.NextDouble() * 100 - 50), // X
+                                (float)(random.NextDouble() * 10),       // Y
+                                (float)(random.NextDouble() * 100 - 50)  // Z
+                    );
                 cubePositions.Add(randomPosition);
-                
+
                 // Generar color aleatorio
-                var randomColor = new Color(
-                    (float)random.NextDouble(), // R
-                    (float)random.NextDouble(), // G
-                    (float)random.NextDouble()  // B
+                var randomColor = new Color((float)random.NextDouble(), // R
+                                            (float)random.NextDouble(), // G
+                                            (float)random.NextDouble()  // B
                 );
                 cubeColors.Add(randomColor);
             }
             spherePositions = new List<Vector3>();
-            FloorWorld = new List<Matrix>();
-            /*
-                for (float t = 0; t > -100; t-=0.1f) {
-                FloorWorld.Add(
-                    Matrix.CreateScale(new Vector3 (FloorUnit,1,FloorUnit))*
-                    Matrix.CreateTranslation(
-                        new Vector3(
-                        20 * MathF.Cos(t),
-                            t* 2,
-                            20 * MathF.Sin(t)
-                        )));
-                }
-*/
-            for (int i = 0; i < numberOfSpheres; i++){
+            for (int i = 0; i < numberOfSpheres; i++)
+            {
                 // Generar posiciones aleatorias dentro de un rango
-                var randomPosition = new Vector3(
-                    (float)(random.NextDouble() * 100 - 50),  // X
-                    (float)(random.NextDouble() * 10),        // Y
-                    (float)(random.NextDouble() * 130 - 50)   // Z
-                );
-                
+                var randomPosition =
+                    new Vector3((float)(random.NextDouble() * 100 - 50), // X
+                                (float)(random.NextDouble() * 10),       // Y
+                                (float)(random.NextDouble() * 130 - 50)  // Z
+                    );
+
                 spherePositions.Add(randomPosition);
                 // Generar color aleatorio
-                var randomColor = new Color(
-                    (float)random.NextDouble(), // R
-                    (float)random.NextDouble(), // G
-                    (float)random.NextDouble()  // B
+                var randomColor = new Color((float)random.NextDouble(), // R
+                                            (float)random.NextDouble(), // G
+                                            (float)random.NextDouble()  // B
                 );
                 sphereColors.Add(randomColor);
             }
-                base.Initialize();
+
+            FloorBB = new BoundingBox(new Vector3(FloorSize / 2, -1, FloorSize / 2),
+                                      new Vector3(-FloorSize / 2, -1, -FloorSize / 2));
+            FloorWorld =
+                Matrix.CreateTranslation(-Vector3.UnitY - new Vector3(0, 0.2f, 0)) *
+                Matrix.CreateScale(FloorSize, 0.2f, FloorSize);
+
+            base.Initialize();
         }
 
         protected override void LoadContent()
         {
-            Bridge = new BridgePrimitive(GraphicsDevice, height: 0.1f, diameter: 2f, tessellation: 32);
             Sphere = new SpherePrimitive(GraphicsDevice);
             Cube = new CubePrimitive(GraphicsDevice);
-            Cylinder = new CylinderPrimitive(GraphicsDevice);
-            Pyramid = new PyramidPrimitive(GraphicsDevice, new Vector3(0, 1, 0),
-                                           new Vector3[] {
-                                     new Vector3(-1, 0, -1),
-                                     new Vector3(1, 0, -1),
-                                     new Vector3(1, 0, 1),
-                                     new Vector3(-1, 0, 1),
-                                           });
-            triangle = new TrianglePrimitive(
-                GraphicsDevice, new Vector3(-1f, 1f, 1f), new Vector3(0f, 2f, 1f),
-                new Vector3(1f, 1f, 1f), Color.Black, Color.Cyan, Color.Magenta);
-            teapot = new TeapotPrimitive(GraphicsDevice, 1);
-            cylinder = new CylinderPrimitive(GraphicsDevice, 10, 7, 8);
-
-            Elevator = new Elevator(Cube, -Vector3.UnitY, 1, 2, Color.Green, 5);
-
-            float starting_angle = MathF.PI / 4;
-            Pendulum = new Pendulum(Cylinder, Sphere, new Vector3(0, 11, 3), 0,
-                                    starting_angle, starting_angle, -starting_angle, 10,
-                                    3, Color.DarkGreen, Color.Yellow, 0.5f);
-            Pendulum2 = new Pendulum(Cylinder, Sphere, new Vector3(0, 11, 10), 0,
-                                     -starting_angle, starting_angle, -starting_angle,
-                                     10, 3, Color.Blue, Color.White, 0.5f);
-            Pendulum3 =
-                new Pendulum(Cylinder, Sphere, new Vector3(0, 5, 0), 0, 0, MathF.PI * 2,
-                             0, 7, 5, Color.Gray, Color.Orange, 1.5f);
-
-            SpaceShipModel = new SpaceShipPrimitive(GraphicsDevice); // Aquí creas la instancia del modelo de nave
-
-
             Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
 
             base.LoadContent();
@@ -199,23 +147,11 @@ namespace TGC.MonoGame.TP
             if (keyboardState.IsKeyDown(Keys.Escape))
                 Exit();
 
-            if (keyboardState.IsKeyDown(Keys.W))
-                PlayerPosition.Z += PlayerSpeed * dt;
-
-            if (keyboardState.IsKeyDown(Keys.S))
-                PlayerPosition.Z -= PlayerSpeed * dt;
-
-            if (keyboardState.IsKeyDown(Keys.D))
-                PlayerPosition.X -= PlayerSpeed * dt;
-
-            if (keyboardState.IsKeyDown(Keys.A))
-                PlayerPosition.X += PlayerSpeed * dt;
-
-            if (keyboardState.IsKeyDown(Keys.Space))
-                PlayerPosition.Y += PlayerSpeed * dt;
-
-            if (keyboardState.IsKeyDown(Keys.LeftShift))
-                PlayerPosition.Y -= PlayerSpeed * dt;
+            if (!player.Intersects(FloorBB))
+            {
+                player.Position -= Gravity * dt;
+            }
+            player.Update(dt, keyboardState);
 
             // Movimiento de la cámara con las flechas para facilidad de ver las cosas
             if (keyboardState.IsKeyDown(Keys.Up))
@@ -233,149 +169,56 @@ namespace TGC.MonoGame.TP
                     CameraRotationSpeed * dt; // Mover la cámara hacia la derecha
 
             base.Update(gameTime);
-
-            Elevator.Update(dt);
-
-            Pendulum.Update(dt);
-            Pendulum2.Update(dt);
-
-            Pendulum3.Position.Z += dt;
-            Pendulum3.RotationAngle += dt * 0.1f;
-            Pendulum3.Update(dt);
-
-            View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + PlayerPosition,
-                                       PlayerPosition + Vector3.UnitY * CameraUpAngle,
+            View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
+                                       player.Position + Vector3.UnitY * CameraUpAngle,
                                        Vector3.Up);
-
-            PlayerWorld = Matrix.CreateTranslation(PlayerPosition);
-            base.Update(gameTime);
         }
 
         protected override void Draw(GameTime gameTime)
         {
             GraphicsDevice.Clear(Color.Black);
-             // Dibuja el modelo de la nave espacial
-             //todo
-            Bridge.Draw(Matrix.CreateTranslation(new Vector3(6, 0,8)), View, Projection);
-            Bridge.Draw(Matrix.CreateTranslation(new Vector3(30, 0,15)), View, Projection);
-            Bridge.Draw(Matrix.CreateTranslation(new Vector3(20, 0,45)), View, Projection);
-            Bridge.Draw(Matrix.CreateTranslation(new Vector3(50, 0,35)), View, Projection);
-            Bridge.Draw(Matrix.CreateTranslation(new Vector3(-10, 0,80)), View, Projection);
-            
-            Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(new Vector3(2, 0,2))); // Ajusta la posición si es necesario
-            SpaceShipModel.Draw(Effect);
-            SpaceShipModel.Draw(Effect);
 
-            DrawGeometry(teapot, new Vector3(2, 0, 10), Yaw, -Pitch, Roll);
-
-            Effect.Parameters["World"].SetValue(PlayerWorld);
             Effect.Parameters["View"].SetValue(View);
             Effect.Parameters["Projection"].SetValue(Projection);
-            Effect.Parameters["DiffuseColor"].SetValue(Color.DarkBlue.ToVector3());
-            Sphere.Draw(Effect);
+            Effect.Parameters["DiffuseColor"].SetValue(player.Intersects(FloorBB)
+                                                           ? Color.Red.ToVector3()
+                                                           : Color.Blue.ToVector3());
+            player.Draw(Effect);
 
-            Effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
-            for (int i = 0; i < FloorWorld.Count; i++) {
-                Matrix floor_world = FloorWorld[i];
-                Effect.Parameters["World"].SetValue(floor_world);
-                Cube.Draw(Effect);
-            }
-
-            Effect.Parameters["DiffuseColor"].SetValue(Color.Gray.ToVector3());
-                Effect.Parameters["World"].SetValue(
-                    Matrix.CreateScale(new Vector3(1000, 0 ,1000)) * 
-                    Matrix.CreateTranslation(-Vector3.UnitY)
-                    );
-                Cube.Draw(Effect);
-
-            Effect.Parameters["DiffuseColor"].SetValue(Color.White.ToVector3());
-            Effect.Parameters["World"].SetValue(Matrix.Identity);
-            Pyramid.Draw(Effect);
-            Elevator.Draw(Effect);
-            Pendulum.Draw(Effect);
-            Pendulum2.Draw(Effect);
-            Pendulum3.Draw(Effect);
-
-            var triangleEffect = triangle.Effect;
-            triangleEffect.World = Matrix.Identity;
-            triangleEffect.View = View;
-            triangleEffect.Projection = Projection;
-            triangleEffect.LightingEnabled = false;
-            triangle.Draw(triangleEffect);
-
-            var cylinderEffect = cylinder.Effect;
-
-            Matrix rotation = Matrix.CreateRotationX(MathHelper.PiOver2);
-
-            cylinderEffect.World = rotation *  Matrix.CreateFromYawPitchRoll(Yaw, Pitch, Roll) *  Matrix.CreateTranslation(new Vector3(0, 0, 30));
-            cylinderEffect.View = View;
-            cylinderEffect.Projection = Projection;
-            cylinder.Draw(cylinderEffect);     
-
-            var cylinderEffect2 = cylinder.Effect;
-            cylinderEffect2.World = Matrix.CreateRotationX(MathHelper.PiOver2) *  Matrix.CreateFromYawPitchRoll(Yaw, Pitch, Roll) *  Matrix.CreateTranslation(new Vector3(15, 0, 70));
-            cylinderEffect2.View = View;
-            cylinderEffect2.Projection = Projection;
-            cylinder.Draw(cylinderEffect2);
-
-            var cylinderEffect3 = cylinder.Effect;
-            cylinderEffect3.World = Matrix.CreateRotationX(MathHelper.PiOver2) *  Matrix.CreateFromYawPitchRoll(Yaw, Pitch, Roll) *  Matrix.CreateTranslation(new Vector3(-20, 0, 100));
-            cylinderEffect3.View = View;
-            cylinderEffect3.Projection = Projection;
-            cylinder.Draw(cylinderEffect3);
-
-            var cylinderEffect4 = cylinder.Effect;
-            cylinderEffect4.World = Matrix.CreateRotationX(MathHelper.PiOver2) *  Matrix.CreateFromYawPitchRoll(Yaw, Pitch, Roll) *  Matrix.CreateTranslation(new Vector3(0, 0, 110));
-            cylinderEffect4.View = View;
-            cylinderEffect4.Projection = Projection;
-
-            cylinder.Draw(cylinderEffect4);
-            /*
-            foreach (var position in cubePositions) {
-                Matrix worldMatrix = Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
-                Effect.Parameters["World"].SetValue(worldMatrix);
-                Cube.Draw(Effect);
-            }*/
-
+            Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
+                new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
 
             for (int i = 0; i < cubePositions.Count; i++)
             {
-              var position = cubePositions[i];
-              var color = cubeColors[i];
+                var position = cubePositions[i];
+                var color = cubeColors[i];
 
-              Matrix worldMatrix = Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
-              Effect.Parameters["World"].SetValue(worldMatrix);
-              Effect.Parameters["DiffuseColor"].SetValue(color.ToVector3()); // Usar el color aleatorio
-              Cube.Draw(Effect);
+                Matrix worldMatrix =
+                    Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
+                Effect.Parameters["World"].SetValue(worldMatrix);
+                Effect.Parameters["DiffuseColor"].SetValue(
+                    color.ToVector3()); // Usar el color aleatorio
+                Cube.Draw(Effect);
             }
-
 
             for (int i = 0; i < spherePositions.Count; i++)
             {
                 var position = spherePositions[i];
                 var color = sphereColors[i];
 
-                Matrix worldMatrix = Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
+                Matrix worldMatrix =
+                    Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
                 Effect.Parameters["World"].SetValue(worldMatrix);
-                Effect.Parameters["DiffuseColor"].SetValue(color.ToVector3()); // Usar el color aleatorio
+                Effect.Parameters["DiffuseColor"].SetValue(
+                    color.ToVector3()); // Usar el color aleatorio
                 Sphere.Draw(Effect);
             }
 
-         
-
-        }
-
-        private void DrawGeometry(GeometricPrimitive geometry, Vector3 position,
-                                  float yaw, float pitch, float roll)
-        {
-            var effect = geometry.Effect;
-
-            effect.World = Matrix.CreateFromYawPitchRoll(yaw, pitch, roll) *
-                           Matrix.CreateTranslation(position);
-            effect.View = View;
-            effect.Projection = Projection;
-
-            geometry.Draw(effect);
+            Effect.Parameters["DiffuseColor"].SetValue(player.Intersects(FloorBB)
+                                                           ? Color.Blue.ToVector3()
+                                                           : Color.Red.ToVector3());
+            Effect.Parameters["World"].SetValue(FloorWorld);
+            Cube.Draw(Effect);
         }
 
         protected override void UnloadContent()
@@ -383,10 +226,6 @@ namespace TGC.MonoGame.TP
             Content.Unload();
             Sphere.Dispose();
             Cube.Dispose();
-            Cylinder.Dispose();
-            Pyramid.Dispose();
-            teapot.Dispose();
-            cylinder.Dispose();
             base.UnloadContent();
         }
     }
