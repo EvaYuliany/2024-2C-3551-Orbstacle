@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -69,7 +70,7 @@ namespace TGC.MonoGame.TP
         protected override void Initialize()
         {
             var rasterizerState = new RasterizerState();
-            rasterizerState.FillMode = FillMode.WireFrame;
+            // rasterizerState.FillMode = FillMode.WireFrame;
             rasterizerState.CullMode = CullMode.None;
             GraphicsDevice.RasterizerState = rasterizerState;
             player = new Player(GraphicsDevice, Vector3.Zero, 4f, 1, Color.DarkBlue);
@@ -120,11 +121,11 @@ namespace TGC.MonoGame.TP
                 sphereColors.Add(randomColor);
             }
 
-            FloorBB = new BoundingBox(new Vector3(FloorSize / 2, -1, FloorSize / 2),
-                                      new Vector3(-FloorSize / 2, -1, -FloorSize / 2));
+            FloorBB = new BoundingBox(new Vector3(-FloorSize / 2, -1, -FloorSize / 2),
+                                      new Vector3(FloorSize / 2, -1, FloorSize / 2));
             FloorWorld =
-                Matrix.CreateTranslation(-Vector3.UnitY - new Vector3(0, 0.2f, 0)) *
-                Matrix.CreateScale(FloorSize, 0.2f, FloorSize);
+                Matrix.CreateScale(FloorSize, 0.2f, FloorSize) *
+                Matrix.CreateTranslation(-Vector3.UnitY - new Vector3(0, 0.2f, 0));
 
             base.Initialize();
         }
@@ -185,6 +186,21 @@ namespace TGC.MonoGame.TP
                                                            : Color.Blue.ToVector3());
             player.Draw(Effect);
 
+            Effect.Parameters["DiffuseColor"].SetValue(player.Intersects(FloorBB)
+                                                           ? Color.Blue.ToVector3()
+                                                           : Color.Red.ToVector3());
+            Effect.Parameters["World"].SetValue(FloorWorld);
+            Cube.Draw(Effect);
+
+            Effect.Parameters["DiffuseColor"].SetValue(Color.Salmon.ToVector3());
+            Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
+                new Vector3(FloorSize / 2, -1, FloorSize / 2)));
+            Cube.Draw(Effect);
+
+            Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
+                new Vector3(-FloorSize / 2, -1, -FloorSize / 2)));
+            Cube.Draw(Effect);
+
             Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
                 new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
 
@@ -213,12 +229,6 @@ namespace TGC.MonoGame.TP
                     color.ToVector3()); // Usar el color aleatorio
                 Sphere.Draw(Effect);
             }
-
-            Effect.Parameters["DiffuseColor"].SetValue(player.Intersects(FloorBB)
-                                                           ? Color.Blue.ToVector3()
-                                                           : Color.Red.ToVector3());
-            Effect.Parameters["World"].SetValue(FloorWorld);
-            Cube.Draw(Effect);
         }
 
         protected override void UnloadContent()
