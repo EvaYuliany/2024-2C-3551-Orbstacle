@@ -102,21 +102,20 @@ namespace TGC.MonoGame.TP.Geometries
 
             return new Vector3(dx, 0, dz);
         }
-        
-        /// <summary>
         ///     Draws the bridge with a transformation to look like a bridge.
         ///     This includes rotation and scaling to simulate the bridge shape.
         /// </summary>
-        public void Draw(Matrix world, Matrix view, Matrix projection)
+        public void Draw(Effect effect)
         {
             // Apply a rotation to make the bridge horizontal and scale to extend the length (like a bridge).
             Matrix bridgeTransformation = Matrix.CreateRotationX(MathHelper.PiOver2) * Matrix.CreateScale(5f, 1f, 1f);
 
             // Combine the transformation with the world matrix.
-            world = bridgeTransformation * world;
+            effect.Parameters["World"]
+             .SetValue(bridgeTransformation * effect.Parameters["World"].GetValueMatrix());
 
             // Use the combined matrix for rendering.
-            base.Draw(world, view, projection);
+            base.Draw(effect);
         }
     }
 }

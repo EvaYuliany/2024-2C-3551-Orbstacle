@@ -148,7 +148,10 @@ public class TGCGame : Game {
     if (!player.Intersects(FloorBB)) {
       player.Velocity.Y -= Gravity * dt;
     } else {
-      player.Velocity.Y *= -player.RestitutionCoeficient;
+      if (keyboardState.IsKeyDown(Keys.Space)) {
+        player.Jump();
+      } else
+        player.Velocity.Y *= -player.RestitutionCoeficient;
     }
 
     if (player.Position.Y <= RestartingY) {

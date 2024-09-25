@@ -70,11 +70,6 @@ namespace TGC.MonoGame.TP.Objects
                     Velocity.Z -= dt * Friction;
             }
 
-            if (keyboardState.IsKeyDown(Keys.Space))
-            {
-                if (Velocity.Y <= 0 && Velocity.Y >= -0.001)
-                    Velocity.Y = JumpBoost;
-            }
 
             Position += new Vector3(Velocity.X > 0 ? MathF.Min(Velocity.X, MaxSpeed)
                                                    : MathF.Max(Velocity.X, -MaxSpeed),
@@ -87,6 +82,11 @@ namespace TGC.MonoGame.TP.Objects
                     Matrix.CreateRotationZ(-Position.X) *
                     Matrix.CreateTranslation(Position);
             BoundingSphere = new BoundingSphere(Position, Radius);
+        }
+
+        public void Jump()
+        {
+          Velocity.Y = JumpBoost;
         }
 
         public void Draw(Effect Effect)
