@@ -72,7 +72,7 @@ public class TGCGame : Game {
     // rasterizerState.FillMode = FillMode.WireFrame;
     rasterizerState.CullMode = CullMode.None;
     GraphicsDevice.RasterizerState = rasterizerState;
-    player = new Player(GraphicsDevice, Vector3.Zero, 15f, 1, Color.DarkBlue);
+    player = new Player(GraphicsDevice, Vector3.Zero, Material.Metal, 1);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
                                Vector3.Up);
@@ -132,7 +132,7 @@ public class TGCGame : Game {
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
     PlayerEffect =
-        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+        Content.Load<Effect>(ContentFolderEffects + "PlayerShader");
 
     base.LoadContent();
   }
@@ -189,7 +189,6 @@ public class TGCGame : Game {
 
     PlayerEffect.Parameters["View"].SetValue(View);
     PlayerEffect.Parameters["Projection"].SetValue(Projection);
-    PlayerEffect.Parameters["DiffuseColor"].SetValue(Color.Blue.ToVector3());
     player.Draw(PlayerEffect);
 
     Effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
