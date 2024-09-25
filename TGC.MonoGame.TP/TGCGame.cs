@@ -33,6 +33,8 @@ public class TGCGame : Game {
   private Effect Effect;
   private Matrix View;
   private Matrix Projection;
+
+  private Vector3 PlayerInitialPos = Vector3.Zero;
   private Player player;
 
   private List<Vector3> cubePositions;
@@ -50,6 +52,7 @@ public class TGCGame : Game {
   }
 
   private float Gravity = 50f;
+  private float RestartingY = -50f;
 
   private int numberOfCubes = 50;
   private int numberOfSpheres = 50;
@@ -139,11 +142,19 @@ public class TGCGame : Game {
     if (keyboardState.IsKeyDown(Keys.Escape))
       Exit();
 
+
+
     if (!player.Intersects(FloorBB)) {
       player.Velocity.Y -= Gravity * dt;
     } else {
       player.Velocity.Y *= -player.RestitutionCoeficient;
     }
+
+    if(player.Position.Y <= RestartingY) {
+      player.Position = PlayerInitialPos;
+      player.Velocity= Vector3.Zero;
+    }
+
     player.Update(dt, keyboardState);
 
     // Movimiento de la cámara con las flechas para facilidad de ver las cosas
