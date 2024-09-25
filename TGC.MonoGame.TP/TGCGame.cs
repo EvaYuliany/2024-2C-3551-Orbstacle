@@ -35,6 +35,7 @@ public class TGCGame : Game {
   private Matrix Projection;
 
   private Vector3 PlayerInitialPos = Vector3.Zero;
+  private Effect PlayerEffect;
   private Player player;
 
   private List<Vector3> cubePositions;
@@ -130,6 +131,7 @@ public class TGCGame : Game {
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
+    PlayerEffect = Content.Load<Effect>(ContentFolderEffects + "PlayerShader");
 
     base.LoadContent();
   }
@@ -180,11 +182,14 @@ public class TGCGame : Game {
 
   protected override void Draw(GameTime gameTime) {
     GraphicsDevice.Clear(Color.Black);
-
     Effect.Parameters["View"].SetValue(View);
     Effect.Parameters["Projection"].SetValue(Projection);
-    Effect.Parameters["DiffuseColor"].SetValue(Color.Blue.ToVector3());
-    player.Draw(Effect);
+
+
+    PlayerEffect.Parameters["View"].SetValue(View);
+    PlayerEffect.Parameters["Projection"].SetValue(Projection);
+    PlayerEffect.Parameters["DiffuseColor"].SetValue(Color.Blue.ToVector3());
+    player.Draw(PlayerEffect);
 
     Effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
     Effect.Parameters["World"].SetValue(FloorWorld);

@@ -18,6 +18,7 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/BasicShader.fx
+/build:Effects/PlayerShader.fx
 
 #begin Models/basic/cube.fbx
 /importer:FbxImporter

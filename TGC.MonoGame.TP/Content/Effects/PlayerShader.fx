@@ -29,6 +29,7 @@ struct VertexShaderInput
 struct VertexShaderOutput
 {
 	float4 Position : SV_POSITION;
+	float4 LocalPosition: TEXCOORD0;
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
@@ -36,17 +37,17 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
 	VertexShaderOutput output = (VertexShaderOutput)0;
 
     float4 worldPosition = mul(input.Position, World);
-
     float4 viewPosition = mul(worldPosition, View);	
 
     output.Position = mul(viewPosition, Projection);
-
+    output.LocalPosition = input.Position;
     return output;
 }
 
 float4 MainPS(VertexShaderOutput input) : COLOR
 {
-    return float4(DiffuseColor, 1.0);
+    float3 color = input.LocalPosition.y > 0.25 ? DiffuseColor : (0,0,0);
+    return float4(color, 1.0);
 }
 
 technique BasicColorDrawing
