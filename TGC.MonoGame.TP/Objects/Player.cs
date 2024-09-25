@@ -83,8 +83,8 @@ namespace TGC.MonoGame.TP.Objects
                                                    : MathF.Max(Velocity.Z, -MaxSpeed)) *
                         dt;
 
-            World = Matrix.CreateRotationX(Velocity.Z) *
-                    Matrix.CreateRotationZ(-Velocity.X) *
+            World = Matrix.CreateRotationX(Position.Z) *
+                    Matrix.CreateRotationZ(-Position.X) *
                     Matrix.CreateTranslation(Position);
             BoundingSphere = new BoundingSphere(Position, Radius);
         }
