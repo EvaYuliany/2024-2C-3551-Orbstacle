@@ -41,34 +41,18 @@ namespace TGC.MonoGame.TP.Objects
 
         public void Update(float dt, KeyboardState keyboardState)
         {
-            float dv = dt * Acceleration;
 
             if (keyboardState.IsKeyDown(Keys.W))
-            {
-                Velocity.Z += dv;
-                if (Velocity.Z > MaxSpeed)
-                    Velocity.Z = MaxSpeed;
-            }
+                Velocity.Z += dt * Acceleration;
 
             if (keyboardState.IsKeyDown(Keys.S))
-            {
-                Velocity.Z -= dv;
-                if (Velocity.Z < -MaxSpeed)
-                    Velocity.Z = -MaxSpeed;
-            }
+                Velocity.Z -= dt * Acceleration;
 
             if (keyboardState.IsKeyDown(Keys.A))
-            {
-                Velocity.X += dv;
-                if (Velocity.X > MaxSpeed)
-                    Velocity.X = MaxSpeed;
-            }
+                Velocity.X += dt * Acceleration;
+
             if (keyboardState.IsKeyDown(Keys.D))
-            {
-                Velocity.X -= dv;
-                if (Velocity.X < -MaxSpeed)
-                    Velocity.X = -MaxSpeed;
-            }
+                Velocity.X -= dt * Acceleration;
 
             if (Velocity.X != 0)
             {
@@ -92,9 +76,15 @@ namespace TGC.MonoGame.TP.Objects
                     Velocity.Y = JumpBoost;
             }
 
-            Position += Velocity * dt;
-            World = Matrix.CreateRotationX(Position.Z) *
-                    Matrix.CreateRotationZ(-Position.X) *
+            Position += new Vector3(Velocity.X > 0 ? MathF.Min(Velocity.X, MaxSpeed)
+                                                   : MathF.Max(Velocity.X, -MaxSpeed),
+                                    Velocity.Y,
+                                    Velocity.Z > 0 ? MathF.Min(Velocity.Z, MaxSpeed)
+                                                   : MathF.Max(Velocity.Z, -MaxSpeed)) *
+                        dt;
+
+            World = Matrix.CreateRotationX(Velocity.Z) *
+                    Matrix.CreateRotationZ(-Velocity.X) *
                     Matrix.CreateTranslation(Position);
             BoundingSphere = new BoundingSphere(Position, Radius);
         }
