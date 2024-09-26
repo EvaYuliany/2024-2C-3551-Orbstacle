@@ -67,12 +67,15 @@ public class TGCGame : Game {
   private Matrix FloorWorld = Matrix.Identity;
   private float FloorSize = 1000f;
 
+  private FloorConstructor FloorConstructor;
+  private Vector3 LastFloor;
+
   protected override void Initialize() {
     var rasterizerState = new RasterizerState();
     // rasterizerState.FillMode = FillMode.WireFrame;
     rasterizerState.CullMode = CullMode.None;
     GraphicsDevice.RasterizerState = rasterizerState;
-    player = new Player(GraphicsDevice, Vector3.Zero, 15f, 1, Color.DarkBlue);
+    player = new Player(GraphicsDevice, Vector3.Zero, Material.Metal, 1);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
                                Vector3.Up);
@@ -118,12 +121,35 @@ public class TGCGame : Game {
       sphereColors.Add(randomColor);
     }
 
-    FloorBB = new BoundingBox(new Vector3(-FloorSize / 2, -1, -FloorSize / 2),
-                              new Vector3(FloorSize / 2, -1, FloorSize / 2));
-    FloorWorld =
-        Matrix.CreateScale(FloorSize, 0.2f, FloorSize) *
-        Matrix.CreateTranslation(-Vector3.UnitY - new Vector3(0, 0.2f, 0));
-
+    FloorConstructor = new FloorConstructor(GraphicsDevice);
+    FloorConstructor.AddBase(Vector2.Zero);
+    FloorConstructor.AddBase(Vector2.UnitX);
+    FloorConstructor.AddBase(Vector2.UnitX);
+    FloorConstructor.AddBase(Vector2.UnitY);
+    FloorConstructor.AddSlope(Vector2.UnitY, true);
+    LastFloor = FloorConstructor.AddBase(Vector2.UnitY);
+    FloorConstructor.AddSlope(Vector2.UnitY, false);
+    FloorConstructor.AddSlope(Vector2.UnitY, false);
+    FloorConstructor.AddSlope(Vector2.UnitY, false);
+    FloorConstructor.AddBase(Vector2.UnitY);
+    FloorConstructor.AddSlope(Vector2.UnitY, true);
+    FloorConstructor.AddSlope(Vector2.UnitY, true);
+    FloorConstructor.AddSlope(Vector2.UnitY, true);
+    FloorConstructor.AddBase(Vector2.UnitY);
+    FloorConstructor.AddBase(Vector2.UnitX);
+    FloorConstructor.AddBase(Vector2.UnitX);
+    FloorConstructor.AddBase(Vector2.UnitX);
+    FloorConstructor.AddSlope(Vector2.UnitX, true);
+    FloorConstructor.AddBase(Vector2.UnitX);
+    FloorConstructor.AddBase(Vector2.UnitY);
+    FloorConstructor.AddBase(Vector2.UnitY);
+    FloorConstructor.AddBase(Vector2.UnitY);
+    FloorConstructor.AddBase(-Vector2.UnitX);
+    FloorConstructor.AddBase(-Vector2.UnitX);
+    FloorConstructor.AddBase(-Vector2.UnitX);
+    FloorConstructor.AddSlope(-Vector2.UnitX,true);
+    FloorConstructor.AddSlope(-Vector2.UnitX,true);
+    FloorConstructor.AddSlope(-Vector2.UnitX,true);
     base.Initialize();
   }
 
@@ -131,8 +157,8 @@ public class TGCGame : Game {
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
-    PlayerEffect =
-        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+    PlayerEffect = Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" +
+                                                                "r"));
 
     base.LoadContent();
   }
@@ -145,10 +171,16 @@ public class TGCGame : Game {
     if (keyboardState.IsKeyDown(Keys.Escape))
       Exit();
 
-    if (!player.Intersects(FloorBB)) {
+    if (!FloorConstructor.Intersects(player.BoundingSphere)) {
       player.Velocity.Y -= Gravity * dt;
     } else {
-      player.Velocity.Y *= -player.RestitutionCoeficient;
+
+      if (keyboardState.IsKeyDown(Keys.Space)) {
+        player.Jump();
+      }
+
+      if (player.Velocity.Y < 0)
+        player.Velocity.Y *= -player.RestitutionCoeficient();
     }
 
     if (player.Position.Y <= RestartingY) {
@@ -186,24 +218,17 @@ public class TGCGame : Game {
 
     PlayerEffect.Parameters["View"].SetValue(View);
     PlayerEffect.Parameters["Projection"].SetValue(Projection);
-    PlayerEffect.Parameters["DiffuseColor"].SetValue(Color.Blue.ToVector3());
     player.Draw(PlayerEffect);
 
-    Effect.Parameters["DiffuseColor"].SetValue(Color.Red.ToVector3());
-    Effect.Parameters["World"].SetValue(FloorWorld);
-    Cube.Draw(Effect);
-
-    Effect.Parameters["DiffuseColor"].SetValue(Color.Salmon.ToVector3());
-    Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
-        new Vector3(FloorSize / 2, -1, FloorSize / 2)));
-    Cube.Draw(Effect);
-
-    Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
-        new Vector3(-FloorSize / 2, -1, -FloorSize / 2)));
-    Cube.Draw(Effect);
+    FloorConstructor.Draw(Effect);
 
     Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
         new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
+
+    Effect.Parameters["World"].SetValue(Matrix.CreateScale(0.3f) *
+                                        Matrix.CreateTranslation(LastFloor));
+    Effect.Parameters["DiffuseColor"].SetValue(Color.Yellow.ToVector3());
+    Cube.Draw(Effect);
 
     for (int i = 0; i < cubePositions.Count; i++) {
       var position = cubePositions[i];
@@ -234,6 +259,7 @@ public class TGCGame : Game {
     Content.Unload();
     Sphere.Dispose();
     Cube.Dispose();
+    FloorConstructor.Dispose();
     base.UnloadContent();
   }
 }
