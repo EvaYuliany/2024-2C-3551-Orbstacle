@@ -29,7 +29,7 @@ namespace TGC.MonoGame.TP.Objects
 
 
         private SpherePrimitive Model;
-        private BoundingSphere BoundingSphere;
+        public BoundingSphere BoundingSphere;
         private Matrix World;
 
         public Vector3 Position;
@@ -38,7 +38,7 @@ namespace TGC.MonoGame.TP.Objects
         public Material Material;
         private static MaterialProperties Props;
 
-        public float RestitutionCoeficient = Props.restitution_coeficient;
+        public float RestitutionCoeficient(){return Props.restitution_coeficient;}
         private float Radius;
 
 
@@ -122,7 +122,7 @@ namespace TGC.MonoGame.TP.Objects
           {
             case Material.Metal:
               Props = new MaterialProperties{ 
-                jump_boost=20f,
+                jump_boost=50f,
                   acceleration=15f,
                   friction=7f,
                   max_speed=50f,
