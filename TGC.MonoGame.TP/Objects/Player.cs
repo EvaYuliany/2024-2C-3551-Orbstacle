@@ -39,20 +39,27 @@ namespace TGC.MonoGame.TP.Objects
             Color = color;
         }
 
-        public void Update(float dt, KeyboardState keyboardState)
+        public void Update(float dt, KeyboardState keyboardState, float cameraAngle)
         {
+           Vector3 forward =  new Vector3(MathF.Cos(cameraAngle), 0, MathF.Sin(cameraAngle));
+            Vector3 left = new Vector3(-MathF.Sin(cameraAngle), 0, MathF.Cos(cameraAngle));
 
-            if (keyboardState.IsKeyDown(Keys.W))
-                Velocity.Z += dt * Acceleration;
+           
+
+
+          if (keyboardState.IsKeyDown(Keys.W))
+                Velocity -= forward * Acceleration * dt;
 
             if (keyboardState.IsKeyDown(Keys.S))
-                Velocity.Z -= dt * Acceleration;
+                Velocity += forward * Acceleration * dt;
 
             if (keyboardState.IsKeyDown(Keys.A))
-                Velocity.X += dt * Acceleration;
+                Velocity += left * Acceleration * dt;
 
             if (keyboardState.IsKeyDown(Keys.D))
-                Velocity.X -= dt * Acceleration;
+                Velocity -= left * Acceleration * dt;
+
+
 
             if (Velocity.X != 0)
             {

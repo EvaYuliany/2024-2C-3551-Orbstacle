@@ -156,7 +156,7 @@ public class TGCGame : Game {
       player.Velocity = Vector3.Zero;
     }
 
-    player.Update(dt, keyboardState);
+    player.Update(dt, keyboardState, CameraAngle);
 
     // Movimiento de la cámara con las flechas para facilidad de ver las cosas
     if (keyboardState.IsKeyDown(Keys.Up))
