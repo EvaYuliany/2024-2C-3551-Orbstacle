@@ -188,7 +188,7 @@ public class TGCGame : Game {
       player.Velocity = Vector3.Zero;
     }
 
-    player.Update(dt, keyboardState);
+    player.Update(dt, keyboardState, CameraAngle);
 
     // Movimiento de la cámara con las flechas para facilidad de ver las cosas
     if (keyboardState.IsKeyDown(Keys.Up))
@@ -204,6 +204,13 @@ public class TGCGame : Game {
     if (keyboardState.IsKeyDown(Keys.Right))
       CameraAngle -=
           CameraRotationSpeed * dt; // Mover la cámara hacia la derecha
+
+    // Vector3 forwardDirection = new Vector3(MathF.Cos(CameraAngle), 0, MathF.Sin(CameraAngle));
+
+    // float movementSpeed = 10f;
+    // if (keyboardState.IsKeyDown(Keys.W)) {
+    //     player.Position += forwardDirection * movementSpeed * dt;
+    // }
 
     base.Update(gameTime);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
