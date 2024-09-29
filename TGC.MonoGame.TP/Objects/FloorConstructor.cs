@@ -15,6 +15,7 @@ public class FloorConstructor : IDisposable {
   private List<Vector3> Translations = new List<Vector3>();
   private List<Vector3> Scales = new List<Vector3>();
   private List<Vector3> Rotations = new List<Vector3>();
+  private List<bool> slopes = new List<bool>();
   private List<Vector3> Colors = new List<Vector3>();
 
   private float FloorUnit = 30;
@@ -37,9 +38,8 @@ public class FloorConstructor : IDisposable {
                                          offset.Equals(Vector2.UnitY)
                                      ? offset * 0.01f
                                      : offset * -0.01f);
-    Vector3 scale =
-        new Vector3(FloorUnit + extra.X, FloorThickness * FloorUnit * 0.8f,
-                    FloorUnit + extra.Y);
+    Vector3 scale = new Vector3(FloorUnit + extra.X, FloorThickness * FloorUnit,
+                                FloorUnit + extra.Y);
     Vector3 rotation = Vector3.Zero;
 
     int previousIndex = Translations.Count - 1;
@@ -60,14 +60,14 @@ public class FloorConstructor : IDisposable {
     );
     Colors.Add(color);
 
-    OrientedBoundingBox BB = OrientedBoundingBox.FromAABB(new BoundingBox(
-        translation +
-            new Vector3(-FloorUnit / 2, FloorThickness, -FloorUnit / 2),
-        translation +
-            new Vector3(FloorUnit / 2, FloorThickness, FloorUnit / 2)));
+    Vector3 bb_min = FloorUnit * -1 / 2 * new Vector3(1, FloorThickness, 1);
+    Vector3 bb_max = FloorUnit * 1 / 2 * new Vector3(1, FloorThickness, 1);
+    OrientedBoundingBox BB = OrientedBoundingBox.FromAABB(
+        new BoundingBox(translation + bb_min, translation + bb_max));
 
     BoundingBoxes.Add(BB);
-    return translation;
+    slopes.Add(false);
+    return translation + Vector3.UnitY * FloorThickness * FloorUnit / 2;
   }
 
   public Vector3 AddSlope(Vector2 offset, bool up) {
@@ -105,21 +105,18 @@ public class FloorConstructor : IDisposable {
                                 (float)random.NextDouble()  // B
     );
     Colors.Add(color);
-    OrientedBoundingBox BB =
-        up ? OrientedBoundingBox.FromAABB(new BoundingBox(
-                 translation + new Vector3(-FloorUnit / 2, -FloorThickness,
-                                           -FloorUnit / 2),
-                 translation +
-                     new Vector3(FloorUnit / 2, FloorThickness, FloorUnit / 2)))
-           : OrientedBoundingBox.FromAABB(new BoundingBox(
-                 translation + new Vector3(-FloorUnit / 2, -FloorThickness,
-                                           -FloorUnit / 2),
-                 translation + new Vector3(FloorUnit / 2, FloorThickness,
-                                           FloorUnit / 2)));
 
-    BB.Rotate(Matrix.CreateRotationX(rotation.X));
-    BB.Rotate(Matrix.CreateRotationY(rotation.Y));
-    BB.Rotate(Matrix.CreateRotationZ(rotation.Z));
+    Vector3 bb_min = FloorUnit * -1 / 2 * new Vector3(1, FloorThickness, 1);
+    Vector3 bb_max = FloorUnit * 1 / 2 * new Vector3(1, FloorThickness, 1);
+
+    OrientedBoundingBox BB = OrientedBoundingBox.FromAABB(
+        new BoundingBox(translation + bb_min, translation + bb_max));
+
+    Matrix rotation_matrix = Matrix.CreateRotationX(-rotation.X) *
+                             Matrix.CreateRotationY(rotation.Y) *
+                             Matrix.CreateRotationZ(rotation.Z);
+
+    BB.Rotate(rotation_matrix);
 
     BoundingBoxes.Add(BB);
 
@@ -127,7 +124,9 @@ public class FloorConstructor : IDisposable {
       CurrentHeight += FloorUnit;
     else
       CurrentHeight -= FloorUnit;
-    return translation;
+
+    slopes.Add(true);
+    return translation + Vector3.UnitY * FloorThickness * FloorUnit / 2;
   }
 
   public void Draw(Effect Effect) {
@@ -143,8 +142,13 @@ public class FloorConstructor : IDisposable {
     }
   }
 
-  public bool Intersects(BoundingSphere m) {
-    return BoundingBoxes.Exists((b) => b.Intersects(m));
+  public (bool, bool) Intersects(BoundingSphere m) {
+    bool isIntersecting = BoundingBoxes.Exists((b) => b.Intersects(m));
+    bool isSlope = !isIntersecting
+                       ? false
+                       : slopes[BoundingBoxes.FindIndex(b => b.Intersects(m))];
+
+    return (isIntersecting, isSlope);
   }
 
   public void Dispose() { Cube.Dispose(); }

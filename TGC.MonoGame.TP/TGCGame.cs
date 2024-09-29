@@ -53,7 +53,7 @@ public class TGCGame : Game {
   }
 
   private float Gravity = 50f;
-  private float RestartingY = -50f;
+  private float RestartingY = -200f;
 
   private int numberOfCubes = 50;
   private int numberOfSpheres = 50;
@@ -72,7 +72,7 @@ public class TGCGame : Game {
 
   protected override void Initialize() {
     var rasterizerState = new RasterizerState();
-    // rasterizerState.FillMode = FillMode.WireFrame;
+    rasterizerState.FillMode = FillMode.WireFrame;
     rasterizerState.CullMode = CullMode.None;
     GraphicsDevice.RasterizerState = rasterizerState;
     player = new Player(GraphicsDevice, Vector3.Zero, Material.Metal, 1);
@@ -126,8 +126,8 @@ public class TGCGame : Game {
     FloorConstructor.AddBase(Vector2.UnitX);
     FloorConstructor.AddBase(Vector2.UnitX);
     FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddSlope(Vector2.UnitY, true);
-    LastFloor = FloorConstructor.AddBase(Vector2.UnitY);
+    LastFloor = FloorConstructor.AddSlope(Vector2.UnitY, true);
+    FloorConstructor.AddBase(Vector2.UnitY);
     FloorConstructor.AddSlope(Vector2.UnitY, false);
     FloorConstructor.AddSlope(Vector2.UnitY, false);
     FloorConstructor.AddSlope(Vector2.UnitY, false);
@@ -147,9 +147,9 @@ public class TGCGame : Game {
     FloorConstructor.AddBase(-Vector2.UnitX);
     FloorConstructor.AddBase(-Vector2.UnitX);
     FloorConstructor.AddBase(-Vector2.UnitX);
-    FloorConstructor.AddSlope(-Vector2.UnitX,true);
-    FloorConstructor.AddSlope(-Vector2.UnitX,true);
-    FloorConstructor.AddSlope(-Vector2.UnitX,true);
+    FloorConstructor.AddSlope(-Vector2.UnitX, true);
+    FloorConstructor.AddSlope(-Vector2.UnitX, true);
+    FloorConstructor.AddSlope(-Vector2.UnitX, true);
     base.Initialize();
   }
 
@@ -157,8 +157,8 @@ public class TGCGame : Game {
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
-    PlayerEffect = Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" +
-                                                                "r"));
+    PlayerEffect =
+        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
 
     base.LoadContent();
   }
@@ -171,9 +171,13 @@ public class TGCGame : Game {
     if (keyboardState.IsKeyDown(Keys.Escape))
       Exit();
 
-    if (!FloorConstructor.Intersects(player.BoundingSphere)) {
-      player.Velocity.Y -= Gravity * dt;
-    } else {
+    player.Update(dt, keyboardState);
+    (bool PlayerIntersectsFloor, bool isSlope) =
+        FloorConstructor.Intersects(player.BoundingSphere);
+    if (PlayerIntersectsFloor) {
+      if (isSlope)
+        player.Position.Y += dt * (15f * dt + player.Velocity.Z - // a*t^2 + v*t = x
+                                   Gravity * MathF.Cos(MathF.PI / 4));  // ?????? la gravedad pega en angulo... 
 
       if (keyboardState.IsKeyDown(Keys.Space)) {
         player.Jump();
@@ -181,14 +185,14 @@ public class TGCGame : Game {
 
       if (player.Velocity.Y < 0)
         player.Velocity.Y *= -player.RestitutionCoeficient();
+    } else {
+      player.Velocity.Y -= Gravity * dt;
     }
 
     if (player.Position.Y <= RestartingY) {
       player.Position = PlayerInitialPos;
       player.Velocity = Vector3.Zero;
     }
-
-    player.Update(dt, keyboardState);
 
     // Movimiento de la cámara con las flechas para facilidad de ver las cosas
     if (keyboardState.IsKeyDown(Keys.Up))
@@ -225,8 +229,7 @@ public class TGCGame : Game {
     Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
         new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
 
-    Effect.Parameters["World"].SetValue(Matrix.CreateScale(0.3f) *
-                                        Matrix.CreateTranslation(LastFloor));
+    Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(LastFloor));
     Effect.Parameters["DiffuseColor"].SetValue(Color.Yellow.ToVector3());
     Cube.Draw(Effect);
 
@@ -239,7 +242,7 @@ public class TGCGame : Game {
       Effect.Parameters["World"].SetValue(worldMatrix);
       Effect.Parameters["DiffuseColor"].SetValue(
           color.ToVector3()); // Usar el color aleatorio
-      Cube.Draw(Effect);
+                              // Cube.Draw(Effect);
     }
 
     for (int i = 0; i < spherePositions.Count; i++) {
@@ -251,7 +254,7 @@ public class TGCGame : Game {
       Effect.Parameters["World"].SetValue(worldMatrix);
       Effect.Parameters["DiffuseColor"].SetValue(
           color.ToVector3()); // Usar el color aleatorio
-      Sphere.Draw(Effect);
+                              // Sphere.Draw(Effect);
     }
   }
 
