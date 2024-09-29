@@ -10,13 +10,8 @@ namespace TGC.MonoGame.TP.Objects {
 
 public class FloorConstructor : IDisposable {
 
-  private List<OrientedBoundingBox> BoundingBoxes =
-      new List<OrientedBoundingBox>();
-  private List<Vector3> Translations = new List<Vector3>();
-  private List<Vector3> Scales = new List<Vector3>();
-  private List<Vector3> Rotations = new List<Vector3>();
-  private List<bool> slopes = new List<bool>();
-  private List<Vector3> Colors = new List<Vector3>();
+  private List<Floor> Floors = new List<Floor>();
+  private List<bool> Slopes= new List<bool>();
 
   private float FloorUnit = 30;
   private float FloorThickness = 0.2f;
@@ -42,31 +37,24 @@ public class FloorConstructor : IDisposable {
                                 FloorUnit + extra.Y);
     Vector3 rotation = Vector3.Zero;
 
-    int previousIndex = Translations.Count - 1;
+    int previousIndex = Floors.Count - 1;
     Vector3 previousTranslation =
-        previousIndex == -1 ? Vector3.Zero : Translations[previousIndex];
+        previousIndex == -1 ? Vector3.Zero : Floors[previousIndex].Translation;
 
     Vector3 translation =
         FloorInitialPos +
         new Vector3(FloorUnit * offset.X + previousTranslation.X, CurrentHeight,
                     FloorUnit * offset.Y + previousTranslation.Z);
 
-    Translations.Add(translation);
-    Rotations.Add(rotation);
-    Scales.Add(scale);
     Vector3 color = new Vector3((float)random.NextDouble(), // R
                                 (float)random.NextDouble(), // G
                                 (float)random.NextDouble()  // B
     );
-    Colors.Add(color);
 
-    Vector3 bb_min = FloorUnit * -1 / 2 * new Vector3(1, FloorThickness, 1);
-    Vector3 bb_max = FloorUnit * 1 / 2 * new Vector3(1, FloorThickness, 1);
-    OrientedBoundingBox BB = OrientedBoundingBox.FromAABB(
-        new BoundingBox(translation + bb_min, translation + bb_max));
+    Floor floor = new Floor(Cube, translation, scale, rotation, color);
+    Floors.Add(floor);
+    Slopes.Add(false);
 
-    BoundingBoxes.Add(BB);
-    slopes.Add(false);
     return translation + Vector3.UnitY * FloorThickness * FloorUnit / 2;
   }
 
@@ -86,9 +74,9 @@ public class FloorConstructor : IDisposable {
         new Vector3(rotation_direction.X, 0, rotation_direction.Y) *
         rotation_angle;
 
-    int previousIndex = Translations.Count - 1;
+    int previousIndex = Floors.Count - 1;
     Vector3 previousTranslation =
-        previousIndex == -1 ? Vector3.Zero : Translations[previousIndex];
+        previousIndex == -1 ? Vector3.Zero : Floors[previousIndex].Translation;
 
     Vector3 translation =
         FloorInitialPos +
@@ -96,59 +84,40 @@ public class FloorConstructor : IDisposable {
                     CurrentHeight + (up ? FloorUnit / 2 : -FloorUnit / 2),
                     FloorUnit * offset.Y + previousTranslation.Z);
 
-    Translations.Add(translation);
-    Rotations.Add(rotation);
-    Scales.Add(scale);
-
     Vector3 color = new Vector3((float)random.NextDouble(), // R
                                 (float)random.NextDouble(), // G
                                 (float)random.NextDouble()  // B
     );
-    Colors.Add(color);
 
-    Vector3 bb_min = FloorUnit * -1 / 2 * new Vector3(1, FloorThickness, 1);
-    Vector3 bb_max = FloorUnit * 1 / 2 * new Vector3(1, FloorThickness, 1);
-
-    OrientedBoundingBox BB = OrientedBoundingBox.FromAABB(
-        new BoundingBox(translation + bb_min, translation + bb_max));
-
+    Floor floor = new Floor(Cube, translation, scale, rotation, color);
+    Floors.Add(floor);
+    Slopes.Add(true);
     Matrix rotation_matrix = Matrix.CreateRotationX(-rotation.X) *
                              Matrix.CreateRotationY(rotation.Y) *
                              Matrix.CreateRotationZ(rotation.Z);
 
-    BB.Rotate(rotation_matrix);
-
-    BoundingBoxes.Add(BB);
+    floor.BoundingBox.Rotate(rotation_matrix);
 
     if (up)
       CurrentHeight += FloorUnit;
     else
       CurrentHeight -= FloorUnit;
 
-    slopes.Add(true);
     return translation + Vector3.UnitY * FloorThickness * FloorUnit / 2;
   }
 
   public void Draw(Effect Effect) {
-    for (int i = 0; i < Translations.Count; i++) {
-      Effect.Parameters["DiffuseColor"].SetValue(Colors[i]);
-      Effect.Parameters["World"].SetValue(
-          Matrix.CreateScale(Scales[i]) *
-          Matrix.CreateRotationX(Rotations[i].X) *
-          Matrix.CreateRotationY(Rotations[i].Y) *
-          Matrix.CreateRotationZ(Rotations[i].Z) *
-          Matrix.CreateTranslation(Translations[i]));
-      Cube.Draw(Effect);
+    for (int i = 0; i < Floors.Count; i++) {
+      Floors[i].Draw(Effect);
     }
   }
 
   public (bool, bool) Intersects(BoundingSphere m) {
-    bool isIntersecting = BoundingBoxes.Exists((b) => b.Intersects(m));
-    bool isSlope = !isIntersecting
-                       ? false
-                       : slopes[BoundingBoxes.FindIndex(b => b.Intersects(m))];
+    int intersecting_floor= Floors.FindIndex((b) => b.Intersects(m));
+    if (intersecting_floor == -1)
+      return (false, false);
 
-    return (isIntersecting, isSlope);
+    return (true, Slopes[intersecting_floor]);
   }
 
   public void Dispose() { Cube.Dispose(); }

@@ -48,8 +48,8 @@ public class TGCGame : Game {
   private float CameraDistanceToPlayer = 15f;
   private float CameraUpAngle = 0;
   private Vector3 GetCameraPosition(float angle) {
-    return new Vector3(MathF.Cos(angle) * CameraDistanceToPlayer, 3,
-                       MathF.Sin(angle) * CameraDistanceToPlayer);
+    return new Vector3(MathF.Sin(angle) * CameraDistanceToPlayer, 3,
+                       MathF.Cos(angle) * CameraDistanceToPlayer);
   }
 
   private float Gravity = 50f;
@@ -72,7 +72,7 @@ public class TGCGame : Game {
 
   protected override void Initialize() {
     var rasterizerState = new RasterizerState();
-    rasterizerState.FillMode = FillMode.WireFrame;
+    // rasterizerState.FillMode = FillMode.WireFrame;
     rasterizerState.CullMode = CullMode.None;
     GraphicsDevice.RasterizerState = rasterizerState;
     player = new Player(GraphicsDevice, Vector3.Zero, Material.Metal, 1);
@@ -175,16 +175,17 @@ public class TGCGame : Game {
     (bool PlayerIntersectsFloor, bool isSlope) =
         FloorConstructor.Intersects(player.BoundingSphere);
     if (PlayerIntersectsFloor) {
-      if (isSlope)
-        player.Position.Y += dt * (15f * dt + player.Velocity.Z - // a*t^2 + v*t = x
-                                   Gravity * MathF.Cos(MathF.PI / 4));  // ?????? la gravedad pega en angulo... 
+      if (isSlope) {
+        player.Position.Y += player.Velocity.Z * 0.5f * dt;
+        player.Position.Z -= player.Velocity.Z * 0.5f * dt;
+      }
 
       if (keyboardState.IsKeyDown(Keys.Space)) {
         player.Jump();
       }
 
       if (player.Velocity.Y < 0)
-        player.Velocity.Y *= -player.RestitutionCoeficient();
+        player.Velocity.Y *= -player.RestitutionCoeficient;
     } else {
       player.Velocity.Y -= Gravity * dt;
     }
