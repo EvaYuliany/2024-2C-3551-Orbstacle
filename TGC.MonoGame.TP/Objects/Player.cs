@@ -58,7 +58,7 @@ namespace TGC.MonoGame.TP.Objects
           SetMaterialProps(material);
         }
 
-        public void Update(float dt, KeyboardState keyboardState, float cameraAngle)
+        public void Update(float dt, KeyboardState keyboardState, float cameraAngle, float cameraAngle)
         {
             Vector3 forward =  new Vector3(MathF.Cos(cameraAngle), 0, MathF.Sin(cameraAngle));
             Vector3 left = new Vector3(-MathF.Sin(cameraAngle), 0, MathF.Cos(cameraAngle));
