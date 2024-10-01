@@ -112,12 +112,12 @@ public class FloorConstructor : IDisposable {
     }
   }
 
-  public (bool, bool) Intersects(BoundingSphere m) {
-    int intersecting_floor= Floors.FindIndex((b) => b.Intersects(m));
+  public (bool, Floor) Intersects(BoundingSphere m) {
+    int intersecting_floor = Floors.FindIndex((b) => b.Intersects(m));
     if (intersecting_floor == -1)
-      return (false, false);
+      return (false, null);
 
-    return (true, Slopes[intersecting_floor]);
+    return (true, Floors[intersecting_floor]);
   }
 
   public void Dispose() { Cube.Dispose(); }

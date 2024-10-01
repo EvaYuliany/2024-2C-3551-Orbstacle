@@ -172,20 +172,23 @@ public class TGCGame : Game {
       Exit();
 
     player.Update(dt, keyboardState);
-    (bool PlayerIntersectsFloor, bool isSlope) =
+    (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
         FloorConstructor.Intersects(player.BoundingSphere);
     if (PlayerIntersectsFloor) {
-      if (isSlope) {
-        player.Position.Y += player.Velocity.Z * 0.5f * dt;
-        player.Position.Z -= player.Velocity.Z * 0.5f * dt;
-      }
+      // if (isSlope) {
+      //     player.Position.Y += MathF.Abs(player.Velocity.Z) * 0.5f * dt;
+      //     player.Position.Z -= player.Velocity.Z * 0.5f * dt;
+      // }
 
       if (keyboardState.IsKeyDown(Keys.Space)) {
         player.Jump();
       }
 
-      if (player.Velocity.Y < 0)
-        player.Velocity.Y *= -player.RestitutionCoeficient;
+      if (player.Velocity.Y <0.1)
+        player.Velocity = 
+          Vector3.Reflect(player.Velocity,IntersectingFloor.Normal)
+          * player.RestitutionCoeficient;
+
     } else {
       player.Velocity.Y -= Gravity * dt;
     }

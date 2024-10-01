@@ -16,6 +16,7 @@ public class Floor : IDisposable {
   public Vector3 Scale;
   public Vector3 Rotation;
   public Vector3 Color;
+  public Vector3 Normal;
 
   private CubePrimitive Cube;
 
@@ -26,6 +27,14 @@ public class Floor : IDisposable {
     Rotation = rotation;
     Color = color;
     Cube = cube;
+
+    Matrix rotation_matrix = Matrix.CreateRotationX(Rotation.X) *
+                             Matrix.CreateRotationY(Rotation.Y) *
+                             Matrix.CreateRotationZ(Rotation.Z);
+
+    Normal = Vector3.Normalize(Vector3.Transform(Vector3.UnitY, rotation_matrix) + 
+             Vector3.UnitY * scale.Y * 0.5f);
+    ;
 
     Vector3 bb = scale * 0.5f;
     BoundingBox = OrientedBoundingBox.FromAABB(
