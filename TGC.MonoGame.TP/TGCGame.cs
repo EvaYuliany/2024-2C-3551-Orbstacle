@@ -63,9 +63,6 @@ public class TGCGame : Game {
   private SpherePrimitive Sphere;
 
   private CubePrimitive Cube;
-  private BoundingBox FloorBB;
-  private Matrix FloorWorld = Matrix.Identity;
-  private float FloorSize = 1000f;
 
   private FloorConstructor FloorConstructor;
 
