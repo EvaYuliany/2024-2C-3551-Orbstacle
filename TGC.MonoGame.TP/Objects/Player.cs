@@ -18,32 +18,32 @@ struct MaterialProperties {
   public float restitution_coeficient;
   public Color color;
 }
+
 public class Player : IDisposable {
 
-MaterialProperties PlasticProperties =
-    new MaterialProperties { jump_boost = 20f,
-                             acceleration = 15f,
-                             friction = 7f,
-                             max_speed = 50f,
-                             restitution_coeficient = 0.8f,
-                             color = Color.Red };
+  MaterialProperties PlasticProperties =
+      new MaterialProperties { jump_boost = 20f,
+                               acceleration = 15f,
+                               friction = 7f,
+                               max_speed = 50f,
+                               restitution_coeficient = 0.8f,
+                               color = Color.Red };
 
-MaterialProperties MetalProperties =
-    new MaterialProperties { jump_boost = 50f,
-                             acceleration = 15f,
-                             friction = 7f,
-                             max_speed = 50f,
-                             restitution_coeficient = 0.8f,
-                             color = Color.Blue };
+  MaterialProperties MetalProperties =
+      new MaterialProperties { jump_boost = 50f,
+                               acceleration = 15f,
+                               friction = 7f,
+                               max_speed = 50f,
+                               restitution_coeficient = 0.8f,
+                               color = Color.Blue };
 
-MaterialProperties RubberProperties =
-    new MaterialProperties { jump_boost = 50f,
-                             acceleration = 15f,
-                             friction = 7f,
-                             max_speed = 50f,
-                             restitution_coeficient = 0.8f,
-                             color = Color.Green };
-
+  MaterialProperties RubberProperties =
+      new MaterialProperties { jump_boost = 50f,
+                               acceleration = 15f,
+                               friction = 7f,
+                               max_speed = 50f,
+                               restitution_coeficient = 0.8f,
+                               color = Color.Green };
 
   private SpherePrimitive Model;
   public BoundingSphere BoundingSphere;
@@ -55,8 +55,8 @@ MaterialProperties RubberProperties =
   public Material Material;
 
   private float Radius;
-
   private Color Color;
+
   public float JumpBoost;
   public float Friction;
   public float MaxSpeed;
@@ -72,43 +72,25 @@ MaterialProperties RubberProperties =
     SetMaterial(material);
   }
 
-  private void SetMaterialProps(MaterialProperties p) {
-    Color = p.color;
-    JumpBoost = p.jump_boost;
-    Friction = p.friction;
-    MaxSpeed = p.max_speed;
-    Acceleration = p.acceleration;
-    RestitutionCoeficient = p.restitution_coeficient;
-  }
+  public bool Intersects(BoundingBox m) { return BoundingSphere.Intersects(m); }
 
-  public void SetMaterial(Material material) {
-    Material = material;
-    switch (material) {
-    case Material.Metal:
-      SetMaterialProps(MetalProperties);
-      break;
-    case Material.Plastic:
-      SetMaterialProps(PlasticProperties);
-      break;
-    case Material.Rubber:
-      SetMaterialProps(RubberProperties);
-      break;
-    }
-  }
-
-  public void Update(float dt, KeyboardState keyboardState) {
+  public void Update(float dt, KeyboardState keyboardState, float cameraAngle) {
+    Vector3 forward =
+        new Vector3(MathF.Cos(cameraAngle), 0, MathF.Sin(cameraAngle));
+    Vector3 left =
+        new Vector3(-MathF.Sin(cameraAngle), 0, MathF.Cos(cameraAngle));
 
     if (keyboardState.IsKeyDown(Keys.W))
-      Velocity.X += dt * Acceleration;
+      Velocity -= forward * Acceleration * dt;
 
     if (keyboardState.IsKeyDown(Keys.S))
-      Velocity.X -= dt * Acceleration;
+      Velocity += forward * Acceleration * dt;
 
     if (keyboardState.IsKeyDown(Keys.A))
-      Velocity.Z -= dt * Acceleration;
+      Velocity += left * Acceleration * dt;
 
     if (keyboardState.IsKeyDown(Keys.D))
-      Velocity.Z += dt * Acceleration;
+      Velocity -= left * Acceleration * dt;
 
     if (Velocity.X != 0) {
       if (Velocity.X < 0)
@@ -146,7 +128,29 @@ MaterialProperties RubberProperties =
     Model.Draw(Effect);
   }
 
-  public bool Intersects(BoundingBox m) { return BoundingSphere.Intersects(m); }
+  private void SetMaterialProps(MaterialProperties p) {
+    Color = p.color;
+    JumpBoost = p.jump_boost;
+    Friction = p.friction;
+    MaxSpeed = p.max_speed;
+    Acceleration = p.acceleration;
+    RestitutionCoeficient = p.restitution_coeficient;
+  }
+
+  public void SetMaterial(Material material) {
+    Material = material;
+    switch (material) {
+    case Material.Metal:
+      SetMaterialProps(MetalProperties);
+      break;
+    case Material.Plastic:
+      SetMaterialProps(PlasticProperties);
+      break;
+    case Material.Rubber:
+      SetMaterialProps(RubberProperties);
+      break;
+    }
+  }
 
   public void Dispose() { Model.Dispose(); }
 }

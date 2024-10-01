@@ -43,13 +43,13 @@ public class TGCGame : Game {
   private List<Color> sphereColors;
   private List<Color> cubeColors;
 
-  private float CameraAngle = -MathF.PI / 2;
+  private float CameraAngle = 0;
   private float CameraRotationSpeed = 5f;
   private float CameraDistanceToPlayer = 15f;
   private float CameraUpAngle = 0;
   private Vector3 GetCameraPosition(float angle) {
-    return new Vector3(MathF.Sin(angle) * CameraDistanceToPlayer, 3,
-                       MathF.Cos(angle) * CameraDistanceToPlayer);
+    return new Vector3(MathF.Cos(angle) * CameraDistanceToPlayer, 3,
+                       MathF.Sin(angle) * CameraDistanceToPlayer);
   }
 
   private float Gravity = 50f;
@@ -171,7 +171,6 @@ public class TGCGame : Game {
     if (keyboardState.IsKeyDown(Keys.Escape))
       Exit();
 
-    player.Update(dt, keyboardState);
     (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
         FloorConstructor.Intersects(player.BoundingSphere);
     if (PlayerIntersectsFloor) {
@@ -198,6 +197,8 @@ public class TGCGame : Game {
       player.Velocity = Vector3.Zero;
     }
 
+    player.Update(dt, keyboardState, CameraAngle);
+
     // Movimiento de la cámara con las flechas para facilidad de ver las cosas
     if (keyboardState.IsKeyDown(Keys.Up))
       CameraUpAngle += CameraRotationSpeed * dt;
@@ -213,6 +214,13 @@ public class TGCGame : Game {
       CameraAngle -=
           CameraRotationSpeed * dt; // Mover la cámara hacia la derecha
 
+    // Vector3 forwardDirection = new Vector3(MathF.Cos(CameraAngle), 0, MathF.Sin(CameraAngle));
+
+    // float movementSpeed = 10f;
+    // if (keyboardState.IsKeyDown(Keys.W)) {
+    //     player.Position += forwardDirection * movementSpeed * dt;
+
+    // }
     base.Update(gameTime);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
