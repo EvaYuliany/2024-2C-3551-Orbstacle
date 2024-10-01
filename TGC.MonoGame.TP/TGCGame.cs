@@ -155,9 +155,9 @@ public class TGCGame : Game {
     FloorConstructor.AddSlope(-Vector2.UnitX, true);
     FloorConstructor.AddSlope(-Vector2.UnitX, true);
 
-    powerup = new PowerUp(GraphicsDevice, powerup_position);
-    check = new Checkpoint(GraphicsDevice, check_position + Vector3.UnitY * 2,
-                           7, 5000);
+    powerup =
+        new PowerUp(GraphicsDevice, powerup_position + Vector3.UnitY * 2);
+    check = new Checkpoint(GraphicsDevice, check_position, 7, 5000);
     base.Initialize();
   }
 

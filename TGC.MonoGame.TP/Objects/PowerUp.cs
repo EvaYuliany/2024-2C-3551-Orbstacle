@@ -23,7 +23,7 @@ public class PowerUp : IDisposable {
   }
 
   public void Draw(Effect Effect) {
-    var color = Color.Blue;
+    var color = Color.Red;
     Matrix worldMatrix = Matrix.CreateTranslation(Position);
     Effect.Parameters["World"].SetValue(worldMatrix);
     Effect.Parameters["DiffuseColor"].SetValue(color.ToVector3());

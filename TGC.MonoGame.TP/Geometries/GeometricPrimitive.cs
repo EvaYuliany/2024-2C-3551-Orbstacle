@@ -39,7 +39,6 @@ namespace TGC.MonoGame.TP.Geometries
         private VertexBuffer VertexBuffer { get; set; }
 
         private IndexBuffer IndexBuffer { get; set; }
-        public BasicEffect Effect { get; set; }
 
         #endregion Fields
 
@@ -88,11 +87,6 @@ namespace TGC.MonoGame.TP.Geometries
             IndexBuffer = new IndexBuffer(graphicsDevice, typeof(ushort), Indices.Count, BufferUsage.None);
 
             IndexBuffer.SetData(Indices.ToArray());
-
-            // Create a BasicEffect, which will be used to render the primitive.
-            Effect = new BasicEffect(graphicsDevice);
-            Effect.VertexColorEnabled = true;
-            Effect.EnableDefaultLighting();
         }
 
         /// <summary>
@@ -120,7 +114,6 @@ namespace TGC.MonoGame.TP.Geometries
             if (!disposing) return;
             VertexBuffer?.Dispose();
             IndexBuffer?.Dispose();
-            Effect?.Dispose();
         }
 
         #endregion Initialization
@@ -150,23 +143,6 @@ namespace TGC.MonoGame.TP.Geometries
 
                 graphicsDevice.DrawIndexedPrimitives(PrimitiveType.TriangleList, 0, 0, primitiveCount);
             }
-        }
-
-        /// <summary>
-        ///     Draw the box.
-        /// </summary>
-        /// <param name="world">The world matrix for this box.</param>
-        /// <param name="view">The view matrix, normally from the camera.</param>
-        /// <param name="projection">The projection matrix, normally from the application.</param>
-        public void Draw(Matrix world, Matrix view, Matrix projection)
-        {
-            // Set BasicEffect parameters.
-            Effect.World = world;
-            Effect.View = view;
-            Effect.Projection = projection;
-
-            // Draw the model, using BasicEffect.
-            Draw(Effect);
         }
 
         #endregion Draw
