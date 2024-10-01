@@ -224,11 +224,11 @@ public class TGCGame : Game {
       CameraUpAngle -= CameraRotationSpeed * dt; // Mover la cámara hacia atrás
 
     if (keyboardState.IsKeyDown(Keys.Left))
-      CameraAngle +=
+      CameraAngle -=
           CameraRotationSpeed * dt; // Mover la cámara hacia la izquierda
 
     if (keyboardState.IsKeyDown(Keys.Right))
-      CameraAngle -=
+      CameraAngle +=
           CameraRotationSpeed * dt; // Mover la cámara hacia la derecha
 
     // Vector3 forwardDirection = new Vector3(MathF.Cos(CameraAngle), 0,
