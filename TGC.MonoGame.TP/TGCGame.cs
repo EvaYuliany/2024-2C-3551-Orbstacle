@@ -68,7 +68,11 @@ public class TGCGame : Game {
   private float FloorSize = 1000f;
 
   private FloorConstructor FloorConstructor;
-  private Vector3 LastFloor;
+
+  private Checkpoint check;
+  private Vector3 check_position;
+  private PowerUp powerup;
+  private Vector3 powerup_position;
 
   protected override void Initialize() {
     var rasterizerState = new RasterizerState();
@@ -123,10 +127,10 @@ public class TGCGame : Game {
 
     FloorConstructor = new FloorConstructor(GraphicsDevice);
     FloorConstructor.AddBase(Vector2.Zero);
-    FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddBase(Vector2.UnitX);
+    powerup_position = FloorConstructor.AddBase(Vector2.UnitX);
+    check_position = FloorConstructor.AddBase(Vector2.UnitX);
     FloorConstructor.AddBase(Vector2.UnitY);
-    LastFloor = FloorConstructor.AddSlope(Vector2.UnitY, true);
+    FloorConstructor.AddSlope(Vector2.UnitY, true);
     FloorConstructor.AddBase(Vector2.UnitY);
     FloorConstructor.AddSlope(Vector2.UnitY, false);
     FloorConstructor.AddSlope(Vector2.UnitY, false);
@@ -150,6 +154,10 @@ public class TGCGame : Game {
     FloorConstructor.AddSlope(-Vector2.UnitX, true);
     FloorConstructor.AddSlope(-Vector2.UnitX, true);
     FloorConstructor.AddSlope(-Vector2.UnitX, true);
+
+    powerup = new PowerUp(GraphicsDevice, powerup_position);
+    check = new Checkpoint(GraphicsDevice, check_position + Vector3.UnitY * 2,
+                           7, 5000);
     base.Initialize();
   }
 
@@ -171,6 +179,15 @@ public class TGCGame : Game {
     if (keyboardState.IsKeyDown(Keys.Escape))
       Exit();
 
+    if (powerup.Intersects(player.BoundingSphere)) { // PowerUp de Velocidad
+      player.Velocity = new Vector3(player.Velocity.X * 1.2f, player.Velocity.Y,
+                                    player.Velocity.Z * 1.2f);
+    }
+
+    if (check.Intersects(player.BoundingSphere)) { // checkpoint
+      PlayerInitialPos = check.Position;
+    }
+
     (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
         FloorConstructor.Intersects(player.BoundingSphere);
     if (PlayerIntersectsFloor) {
@@ -183,10 +200,10 @@ public class TGCGame : Game {
         player.Jump();
       }
 
-      if (player.Velocity.Y <0.1)
-        player.Velocity = 
-          Vector3.Reflect(player.Velocity,IntersectingFloor.Normal)
-          * player.RestitutionCoeficient;
+      if (player.Velocity.Y < 0.1)
+        player.Velocity =
+            Vector3.Reflect(player.Velocity, IntersectingFloor.Normal) *
+            player.RestitutionCoeficient;
 
     } else {
       player.Velocity.Y -= Gravity * dt;
@@ -214,7 +231,8 @@ public class TGCGame : Game {
       CameraAngle -=
           CameraRotationSpeed * dt; // Mover la cámara hacia la derecha
 
-    // Vector3 forwardDirection = new Vector3(MathF.Cos(CameraAngle), 0, MathF.Sin(CameraAngle));
+    // Vector3 forwardDirection = new Vector3(MathF.Cos(CameraAngle), 0,
+    // MathF.Sin(CameraAngle));
 
     // float movementSpeed = 10f;
     // if (keyboardState.IsKeyDown(Keys.W)) {
@@ -237,13 +255,11 @@ public class TGCGame : Game {
     player.Draw(PlayerEffect);
 
     FloorConstructor.Draw(Effect);
+    check.Draw(Effect);
+    powerup.Draw(Effect);
 
     Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
         new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
-
-    Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(LastFloor));
-    Effect.Parameters["DiffuseColor"].SetValue(Color.Yellow.ToVector3());
-    Cube.Draw(Effect);
 
     for (int i = 0; i < cubePositions.Count; i++) {
       var position = cubePositions[i];

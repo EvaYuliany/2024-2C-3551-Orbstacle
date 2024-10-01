@@ -32,7 +32,7 @@ public class Player : IDisposable {
   MaterialProperties MetalProperties =
       new MaterialProperties { jump_boost = 50f,
                                acceleration = 15f,
-                               friction = 7f,
+                               friction = 2f,
                                max_speed = 50f,
                                restitution_coeficient = 0.8f,
                                color = Color.Blue };
