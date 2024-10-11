@@ -185,25 +185,36 @@ public class TGCGame : Game {
       PlayerInitialPos = check.Position;
     }
 
+    // Choques con plataformas
     (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
         FloorConstructor.Intersects(player.BoundingSphere);
     if (PlayerIntersectsFloor) {
-      // if (isSlope) {
-      //     player.Position.Y += MathF.Abs(player.Velocity.Z) * 0.5f * dt;
-      //     player.Position.Z -= player.Velocity.Z * 0.5f * dt;
-      // }
+   
+    // Separo la velocidad en normal y tangente
+    float speedMagnitude = player.Velocity.Length();
+    Vector3 normalComponent = Vector3.Dot(player.Velocity, IntersectingFloor.Normal) * IntersectingFloor.Normal;
+    Vector3 tangentialComponent = player.Velocity - normalComponent;
+    
+    // Reflejo el componente normal unicamente y recalcula la velocidad preservando la magnitud anterior
+    Vector3 reflectedNormal = Vector3.Reflect(normalComponent, IntersectingFloor.Normal);
+    float friccion = 0.87f; // falta coef de restitucion 
+    player.Velocity = Vector3.Normalize(reflectedNormal + tangentialComponent) * speedMagnitude * friccion;
+    
 
-      if (keyboardState.IsKeyDown(Keys.Space)) {
+    // Mantenerse sobre el piso
+    float overlap = player.BoundingSphere.Radius - Vector3.Dot(IntersectingFloor.Normal, player.Position - IntersectingFloor.Translation);
+    if (overlap > 0)
+    {
+        player.Position += IntersectingFloor.Normal * overlap;
+    }
+
+    if (keyboardState.IsKeyDown(Keys.Space))
+    {
         player.Jump();
-      }
-
-      if (player.Velocity.Y < 0.1)
-        player.Velocity =
-            Vector3.Reflect(player.Velocity, IntersectingFloor.Normal) *
-            player.RestitutionCoeficient;
-
-    } else {
-      player.Velocity.Y -= Gravity * dt;
+    }
+    } else
+    {
+        player.Velocity.Y -= Gravity * dt;
     }
 
     if (player.Position.Y <= RestartingY) {
