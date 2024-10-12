@@ -7,12 +7,12 @@ using TGC.MonoGame.TP.Geometries;
 using TGC.MonoGame.TP.Obstacles;
 using TGC.MonoGame.TP.Objects;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Media;
 
 namespace TGC.MonoGame.TP {
 public class TGCGame : Game {
   public const string ContentFolder3D = "Models/";
   public const string ContentFolderEffects = "Effects/";
-  public const string ContentFolderMusic = "Music/";
   public const string ContentFolderSounds = "Sounds/";
   public const string ContentFolderSpriteFonts = "SpriteFonts/";
   public const string ContentFolderTextures = "Textures/";
@@ -37,7 +37,7 @@ public class TGCGame : Game {
   private Vector3 PlayerInitialPos = Vector3.Zero;
   private Effect PlayerEffect;
   private Player player;
-
+  private Song Song { get; set; }
   private List<Vector3> cubePositions;
   private List<Vector3> spherePositions;
   private List<Color> sphereColors;
@@ -162,8 +162,10 @@ public class TGCGame : Game {
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
-    PlayerEffect =
-        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+    PlayerEffect =  Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+    Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
+    MediaPlayer.IsRepeating = true; 
+    MediaPlayer.Play(Song);
 
     base.LoadContent();
   }
