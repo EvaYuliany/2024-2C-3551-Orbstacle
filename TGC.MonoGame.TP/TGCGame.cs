@@ -67,9 +67,9 @@ public class TGCGame : Game {
   private FloorConstructor FloorConstructor;
 
   private Checkpoint check;
-  private Vector3 check_position;
   private PowerUp powerup;
-  private Vector3 powerup_position;
+
+  private Pendulum pendulum;
 
   protected override void Initialize() {
     var rasterizerState = new RasterizerState();
@@ -122,11 +122,17 @@ public class TGCGame : Game {
       sphereColors.Add(randomColor);
     }
 
+    powerup = new PowerUp(GraphicsDevice, Vector3.UnitY * 2);
+    check = new Checkpoint(GraphicsDevice, Vector3.Zero, 7, 5000);
+    pendulum = new Pendulum(GraphicsDevice, Vector3.UnitY * 20, 0, MathF.PI / 2,
+                            MathF.PI / 2, -MathF.PI / 2, 15, 10, Color.Red,
+                            Color.Blue, 1);
+
     FloorConstructor = new FloorConstructor(GraphicsDevice);
     FloorConstructor.AddBase(Vector2.Zero);
-    powerup_position = FloorConstructor.AddBase(Vector2.UnitX);
-    check_position = FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddBase(Vector2.UnitY);
+    powerup.Position += FloorConstructor.AddBase(Vector2.UnitX);
+    pendulum.Position += FloorConstructor.AddBase(Vector2.UnitY);
+    check.Position += FloorConstructor.AddBase(Vector2.UnitX);
     FloorConstructor.AddSlope(Vector2.UnitY, true);
     FloorConstructor.AddBase(Vector2.UnitY);
     FloorConstructor.AddSlope(Vector2.UnitY, false);
@@ -152,9 +158,6 @@ public class TGCGame : Game {
     FloorConstructor.AddSlope(-Vector2.UnitX, true);
     FloorConstructor.AddSlope(-Vector2.UnitX, true);
 
-    powerup =
-        new PowerUp(GraphicsDevice, powerup_position + Vector3.UnitY * 2);
-    check = new Checkpoint(GraphicsDevice, check_position, 7, 5000);
     base.Initialize();
   }
 
@@ -181,17 +184,20 @@ public class TGCGame : Game {
                                     player.Velocity.Z * 1.2f);
     }
 
+    if (pendulum.Intersects(player.BoundingSphere)) {
+      player.Velocity += Vector3.UnitX * pendulum.Speed * 2;
+    }
+
     if (check.Intersects(player.BoundingSphere)) { // checkpoint
       PlayerInitialPos = check.Position;
     }
 
+    player.Update(dt, keyboardState, CameraAngle);
+    pendulum.Update(dt);
+
     (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
         FloorConstructor.Intersects(player.BoundingSphere);
     if (PlayerIntersectsFloor) {
-      // if (isSlope) {
-      //     player.Position.Y += MathF.Abs(player.Velocity.Z) * 0.5f * dt;
-      //     player.Position.Z -= player.Velocity.Z * 0.5f * dt;
-      // }
 
       if (keyboardState.IsKeyDown(Keys.Space)) {
         player.Jump();
@@ -210,8 +216,6 @@ public class TGCGame : Game {
       player.Position = PlayerInitialPos;
       player.Velocity = Vector3.Zero;
     }
-
-    player.Update(dt, keyboardState, CameraAngle);
 
     // Movimiento de la cámara con las flechas para facilidad de ver las cosas
     if (keyboardState.IsKeyDown(Keys.Up))
@@ -250,10 +254,11 @@ public class TGCGame : Game {
     PlayerEffect.Parameters["View"].SetValue(View);
     PlayerEffect.Parameters["Projection"].SetValue(Projection);
     player.Draw(PlayerEffect);
+    pendulum.Draw(Effect);
 
     FloorConstructor.Draw(Effect);
-    check.Draw(Effect);
     powerup.Draw(Effect);
+    check.Draw(Effect);
 
     Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
         new Vector3(2, 0, 2))); // Ajusta la posición si es necesario

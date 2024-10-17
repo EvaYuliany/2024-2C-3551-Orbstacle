@@ -2,12 +2,13 @@ using System;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
-using TGC.MonoGame.TP.Geometries; 
+using TGC.MonoGame.TP.Geometries;
 
 namespace TGC.MonoGame.TP.Obstacles {
 
 public class Pendulum : IDisposable {
 
+  public BoundingSphere BoundingSphere;
   private CylinderPrimitive RodModel;
   private SpherePrimitive BallModel;
   private Color RodColor;
@@ -24,15 +25,15 @@ public class Pendulum : IDisposable {
 
   private float MaxAngle;
   private float MinAngle;
-  private float Speed;
+  public float Speed;
+  private Vector3 SphereCenter;
 
-  public Pendulum(CylinderPrimitive rod, SpherePrimitive ball,
-                  Vector3 vertex_position, float rotation_angle,
-                  float starting_offset, float max_angle, float min_angle,
-                  float r_length, float b_radius, Color r_color, Color b_color,
-                  float speed) {
-    RodModel = rod;
-    BallModel = ball;
+  public Pendulum(GraphicsDevice graphicsDevice, Vector3 vertex_position,
+                  float rotation_angle, float starting_offset, float max_angle,
+                  float min_angle, float r_length, float b_radius,
+                  Color r_color, Color b_color, float speed) {
+    RodModel = new CylinderPrimitive(graphicsDevice, 1, b_radius / 5);
+    BallModel = new SpherePrimitive(graphicsDevice);
     RodColor = r_color;
     BallColor = b_color;
     RodLength = r_length;
@@ -43,6 +44,20 @@ public class Pendulum : IDisposable {
     MaxAngle = max_angle;
     MinAngle = min_angle;
     Speed = speed;
+
+    Matrix Translation =
+        Matrix.CreateTranslation(-Vector3.UnitY * RodLength / 2) *
+        Matrix.CreateRotationZ(AngleOffset) *
+        Matrix.CreateRotationY(RotationAngle) *
+        Matrix.CreateTranslation(Position);
+
+    BallWorld = Matrix.CreateScale(BallRadius) *
+                Matrix.CreateTranslation(-Vector3.UnitY * RodLength / 2) *
+                Translation;
+    RodWorld = Matrix.CreateScale(new Vector3(1, RodLength, 1)) * Translation;
+
+    SphereCenter = Vector3.Transform(Vector3.Zero, BallWorld);
+    BoundingSphere = new BoundingSphere(SphereCenter, BallRadius/2);
   }
 
   public void Update(float dt) {
@@ -58,11 +73,17 @@ public class Pendulum : IDisposable {
         Matrix.CreateRotationY(RotationAngle) *
         Matrix.CreateTranslation(Position);
 
-    RodWorld = Matrix.CreateScale(new Vector3(1, RodLength, 1)) * Translation;
-
-    BallWorld = Matrix.CreateScale(BallRadius / 2) *
+    BallWorld = Matrix.CreateScale(BallRadius) *
                 Matrix.CreateTranslation(-Vector3.UnitY * RodLength / 2) *
                 Translation;
+    RodWorld = Matrix.CreateScale(new Vector3(1, RodLength, 1)) * Translation;
+
+    SphereCenter = Vector3.Transform(Vector3.Zero, BallWorld);
+    BoundingSphere = new BoundingSphere(SphereCenter, BallRadius/2);
+  }
+
+  public bool Intersects(BoundingSphere m) {
+    return BoundingSphere.Intersects(m);
   }
 
   public void Draw(Effect Effect) {
@@ -73,6 +94,7 @@ public class Pendulum : IDisposable {
     Effect.Parameters["DiffuseColor"].SetValue(BallColor.ToVector3());
     Effect.Parameters["World"].SetValue(BallWorld);
     BallModel.Draw(Effect);
+
   }
 
   public void Dispose() {
