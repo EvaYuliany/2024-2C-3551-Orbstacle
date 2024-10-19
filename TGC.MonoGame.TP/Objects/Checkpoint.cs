@@ -11,19 +11,24 @@ namespace TGC.MonoGame.TP.Objects {
 public class Checkpoint : IDisposable {
   private CylinderPrimitive Model;
   private BoundingCylinder bb;
-
-  public Vector3 Position;
-
+  private Vector3 _position;
   private float Radius;
   private float Height;
-  private Color Color;
+
+  public Vector3 Position {
+    get => _position;
+    set { 
+      _position = value;
+      bb = new BoundingCylinder(value, Radius, Height / 2); 
+    }
+  }
+
 
   public Checkpoint(GraphicsDevice graphicsDevice, Vector3 position,
                     float radius, float height) {
     Model = new CylinderPrimitive(graphicsDevice, height, radius * 2, 16);
     Height = height;
     Radius = radius;
-    bb = new BoundingCylinder(position, radius, height / 2);
     Position = position;
   }
 

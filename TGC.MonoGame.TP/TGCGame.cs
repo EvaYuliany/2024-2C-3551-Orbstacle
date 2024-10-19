@@ -43,7 +43,7 @@ public class TGCGame : Game {
   private List<Color> sphereColors;
   private List<Color> cubeColors;
 
-  private float CameraAngle = 0;
+  private float CameraAngle = MathF.PI;
   private float CameraRotationSpeed = 5f;
   private float CameraDistanceToPlayer = 15f;
   private float CameraUpAngle = 0;
@@ -67,7 +67,8 @@ public class TGCGame : Game {
   private FloorConstructor FloorConstructor;
 
   private Checkpoint check;
-  private PowerUp powerup;
+  private SpeedPowerUp powerup;
+  private JumpBoostPowerUp jpowerup;
 
   private Pendulum pendulum;
 
@@ -122,7 +123,8 @@ public class TGCGame : Game {
       sphereColors.Add(randomColor);
     }
 
-    powerup = new PowerUp(GraphicsDevice, Vector3.UnitY * 2);
+    powerup = new SpeedPowerUp(GraphicsDevice, Vector3.UnitY, 2.5f);
+    jpowerup = new JumpBoostPowerUp(GraphicsDevice, Vector3.UnitY, 1.2f);
     check = new Checkpoint(GraphicsDevice, Vector3.Zero, 7, 5000);
     pendulum = new Pendulum(GraphicsDevice, Vector3.UnitY * 20, 0, MathF.PI / 2,
                             MathF.PI / 2, -MathF.PI / 2, 15, 10, Color.Red,
@@ -131,6 +133,7 @@ public class TGCGame : Game {
     FloorConstructor = new FloorConstructor(GraphicsDevice);
     FloorConstructor.AddBase(Vector2.Zero);
     powerup.Position += FloorConstructor.AddBase(Vector2.UnitX);
+    jpowerup.Position += FloorConstructor.AddBase(Vector2.UnitX);
     pendulum.Position += FloorConstructor.AddBase(Vector2.UnitY);
     check.Position += FloorConstructor.AddBase(Vector2.UnitX);
     FloorConstructor.AddSlope(Vector2.UnitY, true);
@@ -172,74 +175,17 @@ public class TGCGame : Game {
   }
 
   protected override void Update(GameTime gameTime) {
-
     float dt = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
     var keyboardState = Keyboard.GetState();
 
     if (keyboardState.IsKeyDown(Keys.Escape))
       Exit();
 
-    if (powerup.Intersects(player.BoundingSphere)) { // PowerUp de Velocidad
-      player.Velocity = new Vector3(player.Velocity.X * 1.2f, player.Velocity.Y,
-                                    player.Velocity.Z * 1.2f);
-    }
-
-    if (pendulum.Intersects(player.BoundingSphere)) {
-      player.Velocity += Vector3.UnitX * pendulum.Speed * 2;
-    }
-
-    if (check.Intersects(player.BoundingSphere)) { // checkpoint
-      PlayerInitialPos = check.Position;
-    }
-
     player.Update(dt, keyboardState, CameraAngle);
     pendulum.Update(dt);
+    CheckCollisions(dt, keyboardState);
+    CameraMovement(dt, keyboardState);
 
-    (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
-        FloorConstructor.Intersects(player.BoundingSphere);
-    if (PlayerIntersectsFloor) {
-
-      if (keyboardState.IsKeyDown(Keys.Space)) {
-        player.Jump();
-      }
-
-      if (player.Velocity.Y < 0.1)
-        player.Velocity =
-            Vector3.Reflect(player.Velocity, IntersectingFloor.Normal) *
-            player.RestitutionCoeficient;
-
-    } else {
-      player.Velocity.Y -= Gravity * dt;
-    }
-
-    if (player.Position.Y <= RestartingY) {
-      player.Position = PlayerInitialPos;
-      player.Velocity = Vector3.Zero;
-    }
-
-    // Movimiento de la cámara con las flechas para facilidad de ver las cosas
-    if (keyboardState.IsKeyDown(Keys.Up))
-      CameraUpAngle += CameraRotationSpeed * dt;
-
-    if (keyboardState.IsKeyDown(Keys.Down))
-      CameraUpAngle -= CameraRotationSpeed * dt; // Mover la cámara hacia atrás
-
-    if (keyboardState.IsKeyDown(Keys.Left))
-      CameraAngle -=
-          CameraRotationSpeed * dt; // Mover la cámara hacia la izquierda
-
-    if (keyboardState.IsKeyDown(Keys.Right))
-      CameraAngle +=
-          CameraRotationSpeed * dt; // Mover la cámara hacia la derecha
-
-    // Vector3 forwardDirection = new Vector3(MathF.Cos(CameraAngle), 0,
-    // MathF.Sin(CameraAngle));
-
-    // float movementSpeed = 10f;
-    // if (keyboardState.IsKeyDown(Keys.W)) {
-    //     player.Position += forwardDirection * movementSpeed * dt;
-
-    // }
     base.Update(gameTime);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
@@ -258,6 +204,7 @@ public class TGCGame : Game {
 
     FloorConstructor.Draw(Effect);
     powerup.Draw(Effect);
+    jpowerup.Draw(Effect);
     check.Draw(Effect);
 
     Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
@@ -285,6 +232,55 @@ public class TGCGame : Game {
       Effect.Parameters["DiffuseColor"].SetValue(
           color.ToVector3()); // Usar el color aleatorio
                               // Sphere.Draw(Effect);
+    }
+  }
+
+  public void CameraMovement(float dt, KeyboardState keyboardState) {
+    if (keyboardState.IsKeyDown(Keys.Up))
+      CameraUpAngle += CameraRotationSpeed * dt;
+
+    if (keyboardState.IsKeyDown(Keys.Down))
+      CameraUpAngle -= CameraRotationSpeed * dt;
+
+    if (keyboardState.IsKeyDown(Keys.Left))
+      CameraAngle -= CameraRotationSpeed * dt;
+
+    if (keyboardState.IsKeyDown(Keys.Right))
+      CameraAngle += CameraRotationSpeed * dt;
+  }
+
+  public void CheckCollisions(float dt, KeyboardState keyboardState) {
+    powerup.CheckCollision(player);
+    jpowerup.CheckCollision(player);
+
+    if (pendulum.Intersects(player.BoundingSphere)) {
+      player.Velocity += Vector3.UnitX * pendulum.Speed * 2;
+    }
+
+    if (check.Intersects(player.BoundingSphere)) { // checkpoint
+      PlayerInitialPos = check.Position;
+    }
+
+    (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
+        FloorConstructor.Intersects(player.BoundingSphere);
+    if (PlayerIntersectsFloor) {
+
+      if (keyboardState.IsKeyDown(Keys.Space)) {
+        player.Jump();
+      }
+
+      if (player.Velocity.Y < 0.1)
+        player.Velocity =
+            Vector3.Reflect(player.Velocity, IntersectingFloor.Normal) *
+            player.RestitutionCoeficient;
+
+    } else {
+      player.Velocity.Y -= Gravity * dt;
+    }
+
+    if (player.Position.Y <= RestartingY) {
+      player.Position = PlayerInitialPos;
+      player.Velocity = Vector3.Zero;
     }
   }
 
