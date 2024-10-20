@@ -18,8 +18,8 @@ public class SpeedPowerUp : PowerUp {
   }
 
   override public void Collided(Player player) {
-    player.Velocity = new Vector3(player.Velocity.X * Speed, player.Velocity.Y,
-                                  player.Velocity.Z * Speed);
+    player.Acceleration = player.Acceleration * Speed;
+    player.MaxSpeed = player.MaxSpeed * Speed * 0.2f;
   }
 }
 }

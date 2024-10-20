@@ -11,7 +11,7 @@ namespace TGC.MonoGame.TP.Objects {
 public class FloorConstructor : IDisposable {
 
   private List<Floor> Floors = new List<Floor>();
-  private List<bool> Slopes= new List<bool>();
+  private List<bool> Slopes = new List<bool>();
 
   private float FloorUnit = 30;
   private float FloorThickness = 0.2f;
@@ -22,7 +22,6 @@ public class FloorConstructor : IDisposable {
   private CubePrimitive Cube;
 
   private float CurrentHeight = FloorInitialHeight;
-  Random random = new Random(0);
 
   public FloorConstructor(GraphicsDevice graphicsDevice) {
     Cube = new CubePrimitive(graphicsDevice);
@@ -46,10 +45,7 @@ public class FloorConstructor : IDisposable {
         new Vector3(FloorUnit * offset.X + previousTranslation.X, CurrentHeight,
                     FloorUnit * offset.Y + previousTranslation.Z);
 
-    Vector3 color = new Vector3((float)random.NextDouble(), // R
-                                (float)random.NextDouble(), // G
-                                (float)random.NextDouble()  // B
-    );
+    Vector3 color = new Vector3(0.5f, 0.5f, 0.5f);
 
     Floor floor = new Floor(Cube, translation, scale, rotation, color);
     Floors.Add(floor);
@@ -84,10 +80,7 @@ public class FloorConstructor : IDisposable {
                     CurrentHeight + (up ? FloorUnit / 2 : -FloorUnit / 2),
                     FloorUnit * offset.Y + previousTranslation.Z);
 
-    Vector3 color = new Vector3((float)random.NextDouble(), // R
-                                (float)random.NextDouble(), // G
-                                (float)random.NextDouble()  // B
-    );
+    Vector3 color = new Vector3(0.5f, 0.5f, 0.5f);
 
     Floor floor = new Floor(Cube, translation, scale, rotation, color);
     Floors.Add(floor);

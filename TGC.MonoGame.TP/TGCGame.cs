@@ -70,6 +70,9 @@ public class TGCGame : Game {
   private SpeedPowerUp powerup;
   private JumpBoostPowerUp jpowerup;
 
+  private Coin coin;
+  private float Points = 0;
+
   private Pendulum pendulum;
 
   protected override void Initialize() {
@@ -126,40 +129,45 @@ public class TGCGame : Game {
     powerup = new SpeedPowerUp(GraphicsDevice, Vector3.UnitY, 2.5f);
     jpowerup = new JumpBoostPowerUp(GraphicsDevice, Vector3.UnitY, 1.2f);
     check = new Checkpoint(GraphicsDevice, Vector3.Zero, 7, 5000);
+    coin = new Coin(GraphicsDevice, Vector3.UnitY * 1.2f);
     pendulum = new Pendulum(GraphicsDevice, Vector3.UnitY * 20, 0, MathF.PI / 2,
                             MathF.PI / 2, -MathF.PI / 2, 15, 10, Color.Red,
                             Color.Blue, 1);
 
     FloorConstructor = new FloorConstructor(GraphicsDevice);
-    FloorConstructor.AddBase(Vector2.Zero);
-    powerup.Position += FloorConstructor.AddBase(Vector2.UnitX);
-    jpowerup.Position += FloorConstructor.AddBase(Vector2.UnitX);
-    pendulum.Position += FloorConstructor.AddBase(Vector2.UnitY);
-    check.Position += FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddSlope(Vector2.UnitY, true);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddSlope(Vector2.UnitY, false);
-    FloorConstructor.AddSlope(Vector2.UnitY, false);
-    FloorConstructor.AddSlope(Vector2.UnitY, false);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddSlope(Vector2.UnitY, true);
-    FloorConstructor.AddSlope(Vector2.UnitY, true);
-    FloorConstructor.AddSlope(Vector2.UnitY, true);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddSlope(Vector2.UnitX, true);
-    FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddBase(-Vector2.UnitX);
-    FloorConstructor.AddBase(-Vector2.UnitX);
-    FloorConstructor.AddBase(-Vector2.UnitX);
-    FloorConstructor.AddSlope(-Vector2.UnitX, true);
-    FloorConstructor.AddSlope(-Vector2.UnitX, true);
-    FloorConstructor.AddSlope(-Vector2.UnitX, true);
+    (int, Vector2,
+     bool)[] Track = { (0, Vector2.Zero, false),   (0, Vector2.UnitX, false),
+                       (0, Vector2.UnitX, false),  (0, Vector2.UnitY, false),
+                       (0, Vector2.UnitX, false),  (1, Vector2.UnitY, true),
+                       (0, Vector2.UnitY, false),  (1, Vector2.UnitY, false),
+                       (1, Vector2.UnitY, false),  (1, Vector2.UnitY, false),
+                       (0, Vector2.UnitY, false),  (1, Vector2.UnitY, true),
+                       (1, Vector2.UnitY, true),   (1, Vector2.UnitY, true),
+                       (0, Vector2.UnitY, false),  (0, Vector2.UnitX, false),
+                       (0, Vector2.UnitX, false),  (0, Vector2.UnitX, false),
+                       (1, Vector2.UnitX, true),   (0, Vector2.UnitX, false),
+                       (0, Vector2.UnitY, false),  (0, Vector2.UnitY, false),
+                       (0, Vector2.UnitY, false),  (0, -Vector2.UnitX, false),
+                       (0, -Vector2.UnitX, false), (0, -Vector2.UnitX, false),
+                       (1, -Vector2.UnitX, true),  (0, -Vector2.UnitX, true),
+                       (1, -Vector2.UnitX, true) };
+
+    List<Vector3> TrackPositions = new List<Vector3>();
+
+    for (int i = 0; i < Track.Length; i++) {
+      (int type, Vector2 offset, bool up) = Track[i];
+      if (type == 1) {
+        TrackPositions.Add(FloorConstructor.AddSlope(offset, up));
+      } else {
+        TrackPositions.Add(FloorConstructor.AddBase(offset));
+      }
+    }
+
+    coin.Position += TrackPositions[1];
+    powerup.Position += TrackPositions[2];
+    jpowerup.Position += TrackPositions[3];
+    pendulum.Position += TrackPositions[4];
+    check.Position += TrackPositions[6];
 
     base.Initialize();
   }
@@ -183,6 +191,7 @@ public class TGCGame : Game {
 
     player.Update(dt, keyboardState, CameraAngle);
     pendulum.Update(dt);
+    coin.Update(dt);
     CheckCollisions(dt, keyboardState);
     CameraMovement(dt, keyboardState);
 
@@ -206,6 +215,7 @@ public class TGCGame : Game {
     powerup.Draw(Effect);
     jpowerup.Draw(Effect);
     check.Draw(Effect);
+    coin.Draw(Effect);
 
     Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
         new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
@@ -253,6 +263,11 @@ public class TGCGame : Game {
     powerup.CheckCollision(player);
     jpowerup.CheckCollision(player);
 
+    if (coin.Intersects(player.BoundingSphere)) {
+      Points++;
+      coin.Dispose();
+    }
+
     if (pendulum.Intersects(player.BoundingSphere)) {
       player.Velocity += Vector3.UnitX * pendulum.Speed * 2;
     }
@@ -264,7 +279,6 @@ public class TGCGame : Game {
     (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
         FloorConstructor.Intersects(player.BoundingSphere);
     if (PlayerIntersectsFloor) {
-
       if (keyboardState.IsKeyDown(Keys.Space)) {
         player.Jump();
       }
