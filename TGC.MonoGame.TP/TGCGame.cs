@@ -194,6 +194,7 @@ public class TGCGame : Game {
         Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
+    MediaPlayer.Volume = 0.2f;
     MediaPlayer.Play(Song);
 
     base.LoadContent();
