@@ -28,7 +28,7 @@ public class Coin : IDisposable {
   public Coin(GraphicsDevice graphicsDevice, Vector3 position) {
     Model = new CylinderPrimitive(graphicsDevice, 0.2f, 1f, 16);
     Height = 0.2f;
-    Radius = 1f;
+    Radius = 1.5f;
     Position = position;
   }
 
