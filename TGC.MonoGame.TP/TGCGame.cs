@@ -71,7 +71,7 @@ public class TGCGame : Game {
   private SpeedPowerUp powerup;
   private JumpBoostPowerUp jpowerup;
 
-  private Coin coin;
+  private List<Coin> coins;
   private float Points = 0;
 
   private Pendulum pendulum;
@@ -86,7 +86,7 @@ public class TGCGame : Game {
     rasterizerState.CullMode = CullMode.None;
     GraphicsDevice.RasterizerState = rasterizerState;
     player = new Player(GraphicsDevice, Vector3.Zero, Material.Metal, 1);
-    SkyBox = new SkyBox(SkyBoxModel,SkyBoxTexture,SkyBoxEffect);
+    SkyBox = new SkyBox(SkyBoxModel, SkyBoxTexture, SkyBoxEffect);
 
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
@@ -136,7 +136,7 @@ public class TGCGame : Game {
     powerup = new SpeedPowerUp(GraphicsDevice, Vector3.UnitY, 2.5f);
     jpowerup = new JumpBoostPowerUp(GraphicsDevice, Vector3.UnitY, 1.2f);
     check = new Checkpoint(GraphicsDevice, Vector3.Zero, 7, 5000);
-    coin = new Coin(GraphicsDevice, Vector3.UnitY * 1.2f);
+    coins = new List<Coin>();
     pendulum = new Pendulum(GraphicsDevice, Vector3.UnitY * 20, 0, MathF.PI / 2,
                             MathF.PI / 2, -MathF.PI / 2, 15, 10, Color.Red,
                             Color.Blue, 1);
@@ -166,15 +166,16 @@ public class TGCGame : Game {
       if (type == 1) {
         TrackPositions.Add(FloorConstructor.AddSlope(offset, up));
       } else {
-        TrackPositions.Add(FloorConstructor.AddBase(offset));
+        Vector3 center = FloorConstructor.AddBase(offset);
+        coins.Add(new Coin(GraphicsDevice, center + Vector3.UnitY * 1.2f));
+        TrackPositions.Add(center);
       }
     }
 
-    coin.Position += TrackPositions[1];
     powerup.Position += TrackPositions[2];
     jpowerup.Position += TrackPositions[3];
     pendulum.Position += TrackPositions[4];
-    check.Position += TrackPositions[6];
+    check.Position += TrackPositions[6] + Vector3.UnitY * 0.5f;
 
     base.Initialize();
   }
@@ -182,15 +183,17 @@ public class TGCGame : Game {
   protected override void LoadContent() {
     SkyBoxEffect = Content.Load<Effect>(ContentFolderEffects + "SkyBox");
     SkyBoxModel = Content.Load<Model>(ContentFolder3D + "skybox/cube");
-    SkyBoxTexture = Content.Load<TextureCube>(ContentFolderTextures + "skybox");
-    SkyBox = new SkyBox(SkyBoxModel,SkyBoxTexture,SkyBoxEffect);
+    SkyBoxTexture =
+        Content.Load<TextureCube>(ContentFolderTextures + ("skybo" + "x"));
+    SkyBox = new SkyBox(SkyBoxModel, SkyBoxTexture, SkyBoxEffect);
 
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
-    PlayerEffect =  Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+    PlayerEffect =
+        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
-    MediaPlayer.IsRepeating = true; 
+    MediaPlayer.IsRepeating = true;
     MediaPlayer.Play(Song);
 
     base.LoadContent();
@@ -205,7 +208,9 @@ public class TGCGame : Game {
 
     player.Update(dt, keyboardState, CameraAngle);
     pendulum.Update(dt);
-    coin.Update(dt);
+    for (int i = 0; i < coins.Count; i++) {
+      coins[i].Update(dt);
+    }
     CheckCollisions(dt, keyboardState, gameTime);
     CameraMovement(dt, keyboardState);
 
@@ -229,8 +234,10 @@ public class TGCGame : Game {
     powerup.Draw(Effect);
     jpowerup.Draw(Effect);
     check.Draw(Effect);
-    coin.Draw(Effect);
-    SkyBox.Draw(View,Projection, GetCameraPosition(CameraUpAngle));
+    for (int i = 0; i < coins.Count; i++) {
+      coins[i].Draw(Effect);
+    }
+    SkyBox.Draw(View, Projection, GetCameraPosition(CameraUpAngle));
 
     Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
         new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
@@ -279,17 +286,21 @@ public class TGCGame : Game {
     powerup.CheckCollision(player, gameTime);
     jpowerup.CheckCollision(player, gameTime);
 
-    if (coin.Intersects(player.BoundingSphere)) {
-      Points++;
-      coin.Dispose();
+    for (int i = 0; i < coins.Count; i++) {
+      if (coins[i].Intersects(player.BoundingSphere)) {
+        Points++;
+        coins[i].Dispose();
+        coins.RemoveAt(i);
+      }
     }
 
     if (pendulum.Intersects(player.BoundingSphere)) {
       player.Velocity += Vector3.UnitX * pendulum.Speed * 2;
     }
 
-    if (check.Intersects(player.BoundingSphere)) { // checkpoint
+    if (check.Intersects(player.BoundingSphere)) {
       PlayerInitialPos = check.Position;
+      check.Dispose();
     }
 
     (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
@@ -309,6 +320,7 @@ public class TGCGame : Game {
     }
 
     if (player.Position.Y <= RestartingY) {
+      // clear powerups...
       player.Position = PlayerInitialPos;
       player.Velocity = Vector3.Zero;
     }

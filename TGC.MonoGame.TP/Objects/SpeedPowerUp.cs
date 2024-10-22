@@ -28,7 +28,7 @@ public class SpeedPowerUp : PowerUp {
 
   override public void Deactivate(Player player) {
     player.Acceleration = player.Acceleration / Speed;
-    player.MaxSpeed = player.MaxSpeed / Speed * 0.2f;
+    player.MaxSpeed = player.MaxSpeed / (Speed * 0.2f);
   }
 }
 }

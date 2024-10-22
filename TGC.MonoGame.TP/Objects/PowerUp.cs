@@ -48,11 +48,12 @@ abstract public class PowerUp : IDisposable {
       if (!active) {
         active = true;
         Collided(player);
+        Dispose();
       }
 
       lastCollision = gameTime.TotalGameTime.Seconds;
     } else {
-      if (gameTime.TotalGameTime.Seconds - lastCollision > duration) {
+      if (active && gameTime.TotalGameTime.Seconds - lastCollision > duration) {
         active = false;
         Deactivate(player);
       }
