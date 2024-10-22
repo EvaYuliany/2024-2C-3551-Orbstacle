@@ -6,6 +6,7 @@ using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.TP.Geometries;
 using TGC.MonoGame.TP.Obstacles;
 using TGC.MonoGame.TP.Objects;
+using TGC.MonoGame.TP.MenuSpace;
 using System.Collections.Generic;
 using Microsoft.Xna.Framework.Media;
 using TGC.MonoGame.TP.SkyBoxSpace;
@@ -79,8 +80,10 @@ public class TGCGame : Game {
   private Model SkyBoxModel { get; set; }
   private Effect SkyBoxEffect { get; set; }
   private TextureCube SkyBoxTexture { get; set; }
+  private Menu menu;
 
   protected override void Initialize() {
+    menu = new Menu(this);
     var rasterizerState = new RasterizerState();
     // rasterizerState.FillMode = FillMode.WireFrame;
     rasterizerState.CullMode = CullMode.None;
@@ -114,11 +117,10 @@ public class TGCGame : Game {
     spherePositions = new List<Vector3>();
     for (int i = 0; i < numberOfSpheres; i++) {
       // Generar posiciones aleatorias dentro de un rango
-      var randomPosition =
-          new Vector3((float)(random.NextDouble() * 600), // X
-                      (float)(random.NextDouble() * 50),        // Y
-                      (float)(random.NextDouble() * 600)  // Z
-          );
+      var randomPosition = new Vector3((float)(random.NextDouble() * 600), // X
+                                       (float)(random.NextDouble() * 50),  // Y
+                                       (float)(random.NextDouble() * 600)  // Z
+      );
 
       spherePositions.Add(randomPosition);
       // Generar color aleatorio
@@ -193,23 +195,29 @@ public class TGCGame : Game {
     MediaPlayer.Volume = 0.2f;
     // MediaPlayer.Play(Song);
 
+    menu.LoadContent();
     base.LoadContent();
   }
 
   protected override void Update(GameTime gameTime) {
+    if (menu.IsActive)
+      menu.Update(gameTime);
     float dt = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
     var keyboardState = Keyboard.GetState();
 
     if (keyboardState.IsKeyDown(Keys.Escape))
       Exit();
 
-    player.Update(dt, keyboardState, CameraAngle);
+    if (!menu.IsActive)
+      player.Update(dt, keyboardState, CameraAngle);
     pendulum.Update(dt);
     for (int i = 0; i < coins.Count; i++) {
       coins[i].Update(dt);
     }
-    CheckCollisions(dt, keyboardState, gameTime);
-    CameraMovement(dt, keyboardState);
+    if (!menu.IsActive) {
+      CheckCollisions(dt, keyboardState, gameTime);
+      CameraMovement(dt, keyboardState);
+    }
 
     base.Update(gameTime);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
@@ -224,7 +232,10 @@ public class TGCGame : Game {
 
     PlayerEffect.Parameters["View"].SetValue(View);
     PlayerEffect.Parameters["Projection"].SetValue(Projection);
-    player.Draw(PlayerEffect);
+    if (menu.IsActive)
+      menu.Draw(gameTime);
+    if (!menu.IsActive)
+      player.Draw(PlayerEffect);
     pendulum.Draw(Effect);
 
     FloorConstructor.Draw(Effect);

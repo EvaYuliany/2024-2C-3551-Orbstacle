@@ -4,7 +4,7 @@ using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 using TGC.MonoGame.TP.Geometries;
 
-namespace TGC.MonoGame.TP.Content.Menu.Menu
+namespace TGC.MonoGame.TP.MenuSpace
 {
     public class Menu {
         private TGCGame game;
