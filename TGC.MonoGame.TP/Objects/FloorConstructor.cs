@@ -16,7 +16,7 @@ public class FloorConstructor : IDisposable {
   private float FloorUnit = 30;
   private float FloorThickness = 0.2f;
 
-  private static float FloorInitialHeight = -15;
+  private static float FloorInitialHeight = -10;
   private Vector3 FloorInitialPos = Vector3.Zero;
 
   private CubePrimitive Cube;

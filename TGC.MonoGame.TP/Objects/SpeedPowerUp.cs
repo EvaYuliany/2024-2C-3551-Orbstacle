@@ -10,6 +10,10 @@ namespace TGC.MonoGame.TP.Objects {
 
 public class SpeedPowerUp : PowerUp {
   float Speed;
+  public override float duration {
+    get { return 10; }
+    set {}
+  }
 
   public SpeedPowerUp(GraphicsDevice graphicsDevice, Vector3 position,
                       float speed)
@@ -20,6 +24,11 @@ public class SpeedPowerUp : PowerUp {
   override public void Collided(Player player) {
     player.Acceleration = player.Acceleration * Speed;
     player.MaxSpeed = player.MaxSpeed * Speed * 0.2f;
+  }
+
+  override public void Deactivate(Player player) {
+    player.Acceleration = player.Acceleration / Speed;
+    player.MaxSpeed = player.MaxSpeed / (Speed * 0.2f);
   }
 }
 }

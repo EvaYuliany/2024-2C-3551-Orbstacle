@@ -10,10 +10,13 @@ namespace TGC.MonoGame.TP.Objects {
 
 abstract public class PowerUp : IDisposable {
   private CubePrimitive Model;
-  private bool colliding = false;
+  private bool active = false;
   private Vector3 _position;
   private Color Color;
   private BoundingBox bb;
+  private float lastCollision = 0;
+
+  abstract public float duration { get; set; }
 
   public Vector3 Position {
     get => _position;
@@ -38,15 +41,22 @@ abstract public class PowerUp : IDisposable {
   }
 
   abstract public void Collided(Player player);
+  abstract public void Deactivate(Player player);
 
-  public void CheckCollision(Player player) {
+  public void CheckCollision(Player player, GameTime gameTime) {
     if (bb.Intersects(player.BoundingSphere)) {
-      if (!colliding) {
+      if (!active) {
+        active = true;
         Collided(player);
-        colliding = true;
+        Dispose();
       }
+
+      lastCollision = gameTime.TotalGameTime.Seconds;
     } else {
-      colliding = false;
+      if (active && gameTime.TotalGameTime.Seconds - lastCollision > duration) {
+        active = false;
+        Deactivate(player);
+      }
     }
   }
 
