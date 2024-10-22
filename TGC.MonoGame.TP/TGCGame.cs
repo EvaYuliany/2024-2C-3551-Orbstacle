@@ -7,12 +7,13 @@ using TGC.MonoGame.TP.Geometries;
 using TGC.MonoGame.TP.Obstacles;
 using TGC.MonoGame.TP.Objects;
 using System.Collections.Generic;
+using Microsoft.Xna.Framework.Media;
+using TGC.MonoGame.TP.SkyBoxSpace;
 
 namespace TGC.MonoGame.TP {
 public class TGCGame : Game {
   public const string ContentFolder3D = "Models/";
   public const string ContentFolderEffects = "Effects/";
-  public const string ContentFolderMusic = "Music/";
   public const string ContentFolderSounds = "Sounds/";
   public const string ContentFolderSpriteFonts = "SpriteFonts/";
   public const string ContentFolderTextures = "Textures/";
@@ -37,7 +38,7 @@ public class TGCGame : Game {
   private Vector3 PlayerInitialPos = Vector3.Zero;
   private Effect PlayerEffect;
   private Player player;
-
+  private Song Song { get; set; }
   private List<Vector3> cubePositions;
   private List<Vector3> spherePositions;
   private List<Color> sphereColors;
@@ -74,6 +75,10 @@ public class TGCGame : Game {
   private float Points = 0;
 
   private Pendulum pendulum;
+  private SkyBox SkyBox { get; set; }
+  private Model SkyBoxModel { get; set; }
+  private Effect SkyBoxEffect { get; set; }
+  private TextureCube SkyBoxTexture { get; set; }
 
   protected override void Initialize() {
     var rasterizerState = new RasterizerState();
@@ -81,6 +86,8 @@ public class TGCGame : Game {
     rasterizerState.CullMode = CullMode.None;
     GraphicsDevice.RasterizerState = rasterizerState;
     player = new Player(GraphicsDevice, Vector3.Zero, Material.Metal, 1);
+    SkyBox = new SkyBox(SkyBoxModel,SkyBoxTexture,SkyBoxEffect);
+
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
                                Vector3.Up);
@@ -173,11 +180,18 @@ public class TGCGame : Game {
   }
 
   protected override void LoadContent() {
+    SkyBoxEffect = Content.Load<Effect>(ContentFolderEffects + "SkyBox");
+    SkyBoxModel = Content.Load<Model>(ContentFolder3D + "skybox/cube");
+    SkyBoxTexture = Content.Load<TextureCube>(ContentFolderTextures + "skybox");
+    SkyBox = new SkyBox(SkyBoxModel,SkyBoxTexture,SkyBoxEffect);
+
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
-    PlayerEffect =
-        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+    PlayerEffect =  Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+    Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
+    MediaPlayer.IsRepeating = true; 
+    MediaPlayer.Play(Song);
 
     base.LoadContent();
   }
@@ -216,6 +230,7 @@ public class TGCGame : Game {
     jpowerup.Draw(Effect);
     check.Draw(Effect);
     coin.Draw(Effect);
+    SkyBox.Draw(View,Projection, GetCameraPosition(CameraUpAngle));
 
     Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
         new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
