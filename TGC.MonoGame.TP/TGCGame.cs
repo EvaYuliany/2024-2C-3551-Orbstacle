@@ -56,8 +56,8 @@ public class TGCGame : Game {
   private float Gravity = 50f;
   private float RestartingY = -200f;
 
-  private int numberOfCubes = 50;
-  private int numberOfSpheres = 50;
+  private int numberOfCubes = 100;
+  private int numberOfSpheres = 100;
 
   private Random random;
 
@@ -99,13 +99,10 @@ public class TGCGame : Game {
     cubeColors = new List<Color>();
     sphereColors = new List<Color>();
     for (int i = 0; i < numberOfCubes; i++) {
-      // Generar posiciones aleatorias dentro de un rango (por ejemplo, en un
-      // área 100x100x100)
-      var randomPosition =
-          new Vector3((float)(random.NextDouble() * 100 - 50), // X
-                      (float)(random.NextDouble() * 10),       // Y
-                      (float)(random.NextDouble() * 100 - 50)  // Z
-          );
+      var randomPosition = new Vector3((float)(random.NextDouble() * 600), // X
+                                       (float)(random.NextDouble() * 20),  // Y
+                                       (float)(random.NextDouble() * 600)  // Z
+      );
       cubePositions.Add(randomPosition);
 
       // Generar color aleatorio
@@ -119,9 +116,9 @@ public class TGCGame : Game {
     for (int i = 0; i < numberOfSpheres; i++) {
       // Generar posiciones aleatorias dentro de un rango
       var randomPosition =
-          new Vector3((float)(random.NextDouble() * 100 - 50), // X
-                      (float)(random.NextDouble() * 10),       // Y
-                      (float)(random.NextDouble() * 130 - 50)  // Z
+          new Vector3((float)(random.NextDouble() * 600), // X
+                      (float)(random.NextDouble() * 50),        // Y
+                      (float)(random.NextDouble() * 600)  // Z
           );
 
       spherePositions.Add(randomPosition);
@@ -195,7 +192,7 @@ public class TGCGame : Game {
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
-    MediaPlayer.Play(Song);
+    // MediaPlayer.Play(Song);
 
     base.LoadContent();
   }
@@ -252,7 +249,7 @@ public class TGCGame : Game {
       Effect.Parameters["World"].SetValue(worldMatrix);
       Effect.Parameters["DiffuseColor"].SetValue(
           color.ToVector3()); // Usar el color aleatorio
-                              // Cube.Draw(Effect);
+      Cube.Draw(Effect);
     }
 
     for (int i = 0; i < spherePositions.Count; i++) {
@@ -264,7 +261,7 @@ public class TGCGame : Game {
       Effect.Parameters["World"].SetValue(worldMatrix);
       Effect.Parameters["DiffuseColor"].SetValue(
           color.ToVector3()); // Usar el color aleatorio
-                              // Sphere.Draw(Effect);
+      Sphere.Draw(Effect);
     }
   }
 
