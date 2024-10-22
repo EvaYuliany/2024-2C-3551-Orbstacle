@@ -43,7 +43,7 @@ public class TGCGame : Game {
   private List<Color> sphereColors;
   private List<Color> cubeColors;
 
-  private float CameraAngle = 0;
+  private float CameraAngle = MathF.PI;
   private float CameraRotationSpeed = 5f;
   private float CameraDistanceToPlayer = 15f;
   private float CameraUpAngle = 0;
@@ -67,9 +67,13 @@ public class TGCGame : Game {
   private FloorConstructor FloorConstructor;
 
   private Checkpoint check;
-  private Vector3 check_position;
-  private PowerUp powerup;
-  private Vector3 powerup_position;
+  private SpeedPowerUp powerup;
+  private JumpBoostPowerUp jpowerup;
+
+  private Coin coin;
+  private float Points = 0;
+
+  private Pendulum pendulum;
 
   protected override void Initialize() {
     var rasterizerState = new RasterizerState();
@@ -122,39 +126,49 @@ public class TGCGame : Game {
       sphereColors.Add(randomColor);
     }
 
-    FloorConstructor = new FloorConstructor(GraphicsDevice);
-    FloorConstructor.AddBase(Vector2.Zero);
-    powerup_position = FloorConstructor.AddBase(Vector2.UnitX);
-    check_position = FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddSlope(Vector2.UnitY, true);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddSlope(Vector2.UnitY, false);
-    FloorConstructor.AddSlope(Vector2.UnitY, false);
-    FloorConstructor.AddSlope(Vector2.UnitY, false);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddSlope(Vector2.UnitY, true);
-    FloorConstructor.AddSlope(Vector2.UnitY, true);
-    FloorConstructor.AddSlope(Vector2.UnitY, true);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddSlope(Vector2.UnitX, true);
-    FloorConstructor.AddBase(Vector2.UnitX);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddBase(Vector2.UnitY);
-    FloorConstructor.AddBase(-Vector2.UnitX);
-    FloorConstructor.AddBase(-Vector2.UnitX);
-    FloorConstructor.AddBase(-Vector2.UnitX);
-    FloorConstructor.AddSlope(-Vector2.UnitX, true);
-    FloorConstructor.AddSlope(-Vector2.UnitX, true);
-    FloorConstructor.AddSlope(-Vector2.UnitX, true);
+    powerup = new SpeedPowerUp(GraphicsDevice, Vector3.UnitY, 2.5f);
+    jpowerup = new JumpBoostPowerUp(GraphicsDevice, Vector3.UnitY, 1.2f);
+    check = new Checkpoint(GraphicsDevice, Vector3.Zero, 7, 5000);
+    coin = new Coin(GraphicsDevice, Vector3.UnitY * 1.2f);
+    pendulum = new Pendulum(GraphicsDevice, Vector3.UnitY * 20, 0, MathF.PI / 2,
+                            MathF.PI / 2, -MathF.PI / 2, 15, 10, Color.Red,
+                            Color.Blue, 1);
 
-    powerup =
-        new PowerUp(GraphicsDevice, powerup_position + Vector3.UnitY * 2);
-    check = new Checkpoint(GraphicsDevice, check_position, 7, 5000);
+    FloorConstructor = new FloorConstructor(GraphicsDevice);
+    (int, Vector2,
+     bool)[] Track = { (0, Vector2.Zero, false),   (0, Vector2.UnitX, false),
+                       (0, Vector2.UnitX, false),  (0, Vector2.UnitY, false),
+                       (0, Vector2.UnitX, false),  (1, Vector2.UnitY, true),
+                       (0, Vector2.UnitY, false),  (1, Vector2.UnitY, false),
+                       (1, Vector2.UnitY, false),  (1, Vector2.UnitY, false),
+                       (0, Vector2.UnitY, false),  (1, Vector2.UnitY, true),
+                       (1, Vector2.UnitY, true),   (1, Vector2.UnitY, true),
+                       (0, Vector2.UnitY, false),  (0, Vector2.UnitX, false),
+                       (0, Vector2.UnitX, false),  (0, Vector2.UnitX, false),
+                       (1, Vector2.UnitX, true),   (0, Vector2.UnitX, false),
+                       (0, Vector2.UnitY, false),  (0, Vector2.UnitY, false),
+                       (0, Vector2.UnitY, false),  (0, -Vector2.UnitX, false),
+                       (0, -Vector2.UnitX, false), (0, -Vector2.UnitX, false),
+                       (1, -Vector2.UnitX, true),  (0, -Vector2.UnitX, true),
+                       (1, -Vector2.UnitX, true) };
+
+    List<Vector3> TrackPositions = new List<Vector3>();
+
+    for (int i = 0; i < Track.Length; i++) {
+      (int type, Vector2 offset, bool up) = Track[i];
+      if (type == 1) {
+        TrackPositions.Add(FloorConstructor.AddSlope(offset, up));
+      } else {
+        TrackPositions.Add(FloorConstructor.AddBase(offset));
+      }
+    }
+
+    coin.Position += TrackPositions[1];
+    powerup.Position += TrackPositions[2];
+    jpowerup.Position += TrackPositions[3];
+    pendulum.Position += TrackPositions[4];
+    check.Position += TrackPositions[6];
+
     base.Initialize();
   }
 
@@ -171,73 +185,18 @@ public class TGCGame : Game {
   }
 
   protected override void Update(GameTime gameTime) {
-
     float dt = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
     var keyboardState = Keyboard.GetState();
 
     if (keyboardState.IsKeyDown(Keys.Escape))
       Exit();
 
-    if (powerup.Intersects(player.BoundingSphere)) { // PowerUp de Velocidad
-      player.Velocity = new Vector3(player.Velocity.X * 1.2f, player.Velocity.Y,
-                                    player.Velocity.Z * 1.2f);
-    }
-
-    if (check.Intersects(player.BoundingSphere)) { // checkpoint
-      PlayerInitialPos = check.Position;
-    }
-
-    (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
-        FloorConstructor.Intersects(player.BoundingSphere);
-    if (PlayerIntersectsFloor) {
-      // if (isSlope) {
-      //     player.Position.Y += MathF.Abs(player.Velocity.Z) * 0.5f * dt;
-      //     player.Position.Z -= player.Velocity.Z * 0.5f * dt;
-      // }
-
-      if (keyboardState.IsKeyDown(Keys.Space)) {
-        player.Jump();
-      }
-
-      if (player.Velocity.Y < 0.1)
-        player.Velocity =
-            Vector3.Reflect(player.Velocity, IntersectingFloor.Normal) *
-            player.RestitutionCoeficient;
-
-    } else {
-      player.Velocity.Y -= Gravity * dt;
-    }
-
-    if (player.Position.Y <= RestartingY) {
-      player.Position = PlayerInitialPos;
-      player.Velocity = Vector3.Zero;
-    }
-
     player.Update(dt, keyboardState, CameraAngle);
+    pendulum.Update(dt);
+    coin.Update(dt);
+    CheckCollisions(dt, keyboardState);
+    CameraMovement(dt, keyboardState);
 
-    // Movimiento de la cámara con las flechas para facilidad de ver las cosas
-    if (keyboardState.IsKeyDown(Keys.Up))
-      CameraUpAngle += CameraRotationSpeed * dt;
-
-    if (keyboardState.IsKeyDown(Keys.Down))
-      CameraUpAngle -= CameraRotationSpeed * dt; // Mover la cámara hacia atrás
-
-    if (keyboardState.IsKeyDown(Keys.Left))
-      CameraAngle -=
-          CameraRotationSpeed * dt; // Mover la cámara hacia la izquierda
-
-    if (keyboardState.IsKeyDown(Keys.Right))
-      CameraAngle +=
-          CameraRotationSpeed * dt; // Mover la cámara hacia la derecha
-
-    // Vector3 forwardDirection = new Vector3(MathF.Cos(CameraAngle), 0,
-    // MathF.Sin(CameraAngle));
-
-    // float movementSpeed = 10f;
-    // if (keyboardState.IsKeyDown(Keys.W)) {
-    //     player.Position += forwardDirection * movementSpeed * dt;
-
-    // }
     base.Update(gameTime);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
@@ -252,10 +211,13 @@ public class TGCGame : Game {
     PlayerEffect.Parameters["View"].SetValue(View);
     PlayerEffect.Parameters["Projection"].SetValue(Projection);
     player.Draw(PlayerEffect);
+    pendulum.Draw(Effect);
 
     FloorConstructor.Draw(Effect);
-    check.Draw(Effect);
     powerup.Draw(Effect);
+    jpowerup.Draw(Effect);
+    check.Draw(Effect);
+    coin.Draw(Effect);
 
     Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
         new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
@@ -282,6 +244,59 @@ public class TGCGame : Game {
       Effect.Parameters["DiffuseColor"].SetValue(
           color.ToVector3()); // Usar el color aleatorio
                               // Sphere.Draw(Effect);
+    }
+  }
+
+  public void CameraMovement(float dt, KeyboardState keyboardState) {
+    if (keyboardState.IsKeyDown(Keys.Up))
+      CameraUpAngle += CameraRotationSpeed * dt;
+
+    if (keyboardState.IsKeyDown(Keys.Down))
+      CameraUpAngle -= CameraRotationSpeed * dt;
+
+    if (keyboardState.IsKeyDown(Keys.Left))
+      CameraAngle -= CameraRotationSpeed * dt;
+
+    if (keyboardState.IsKeyDown(Keys.Right))
+      CameraAngle += CameraRotationSpeed * dt;
+  }
+
+  public void CheckCollisions(float dt, KeyboardState keyboardState) {
+    powerup.CheckCollision(player);
+    jpowerup.CheckCollision(player);
+
+    if (coin.Intersects(player.BoundingSphere)) {
+      Points++;
+      coin.Dispose();
+    }
+
+    if (pendulum.Intersects(player.BoundingSphere)) {
+      player.Velocity += Vector3.UnitX * pendulum.Speed * 2;
+    }
+
+    if (check.Intersects(player.BoundingSphere)) { // checkpoint
+      PlayerInitialPos = check.Position;
+    }
+
+    (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
+        FloorConstructor.Intersects(player.BoundingSphere);
+    if (PlayerIntersectsFloor) {
+      if (keyboardState.IsKeyDown(Keys.Space)) {
+        player.Jump();
+      }
+
+      if (player.Velocity.Y < 0.1)
+        player.Velocity =
+            Vector3.Reflect(player.Velocity, IntersectingFloor.Normal) *
+            player.RestitutionCoeficient;
+
+    } else {
+      player.Velocity.Y -= Gravity * dt;
+    }
+
+    if (player.Position.Y <= RestartingY) {
+      player.Position = PlayerInitialPos;
+      player.Velocity = Vector3.Zero;
     }
   }
 
