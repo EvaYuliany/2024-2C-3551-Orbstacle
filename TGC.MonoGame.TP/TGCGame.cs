@@ -89,12 +89,11 @@ public class TGCGame : Game {
     rasterizerState.CullMode = CullMode.None;
     GraphicsDevice.RasterizerState = rasterizerState;
     player = new Player(GraphicsDevice, Vector3.Zero, Material.Metal, 1);
-
+    
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
                                Vector3.Up);
-    Projection = Matrix.CreatePerspectiveFieldOfView(
-        MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 250);
+    Projection = Matrix.CreatePerspectiveFieldOfView( MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 1500);
 
     random = new Random(0);
     cubePositions = new List<Vector3>();
@@ -181,8 +180,7 @@ public class TGCGame : Game {
   protected override void LoadContent() {
     SkyBoxEffect = Content.Load<Effect>(ContentFolderEffects + "SkyBox");
     SkyBoxModel = Content.Load<Model>(ContentFolder3D + "skybox/cube");
-    SkyBoxTexture =
-        Content.Load<TextureCube>(ContentFolderTextures + ("skybo" + "x"));
+    SkyBoxTexture =  Content.Load<TextureCube>(ContentFolderTextures + "skybox");
     SkyBox = new SkyBox(SkyBoxModel, SkyBoxTexture, SkyBoxEffect);
 
     Sphere = new SpherePrimitive(GraphicsDevice);
@@ -193,7 +191,7 @@ public class TGCGame : Game {
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
-    // MediaPlayer.Play(Song);
+    MediaPlayer.Play(Song);
 
     menu.LoadContent();
     base.LoadContent();
@@ -245,7 +243,6 @@ public class TGCGame : Game {
     for (int i = 0; i < coins.Count; i++) {
       coins[i].Draw(Effect);
     }
-    SkyBox.Draw(View, Projection, GetCameraPosition(CameraUpAngle));
 
     Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
         new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
@@ -273,6 +270,8 @@ public class TGCGame : Game {
           color.ToVector3()); // Usar el color aleatorio
       Sphere.Draw(Effect);
     }
+        SkyBox.Draw(View, Projection, GetCameraPosition(CameraUpAngle));
+
   }
 
   public void CameraMovement(float dt, KeyboardState keyboardState) {
