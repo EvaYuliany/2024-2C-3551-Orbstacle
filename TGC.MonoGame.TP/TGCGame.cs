@@ -86,7 +86,6 @@ public class TGCGame : Game {
     rasterizerState.CullMode = CullMode.None;
     GraphicsDevice.RasterizerState = rasterizerState;
     player = new Player(GraphicsDevice, Vector3.Zero, Material.Metal, 1);
-    SkyBox = new SkyBox(SkyBoxModel, SkyBoxTexture, SkyBoxEffect);
 
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
