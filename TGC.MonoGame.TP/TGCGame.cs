@@ -16,7 +16,7 @@ public class TGCGame : Game {
   public const string ContentFolder3D = "Models/";
   public const string ContentFolderEffects = "Effects/";
   public const string ContentFolderSounds = "Sounds/";
-  public const string ContentFolderSpriteFonts = "SpriteFonts/";
+  public const string ContentFolderSpriteFonts = "Font/";
   public const string ContentFolderTextures = "Textures/";
   public TGCGame() {
     Graphics = new GraphicsDeviceManager(this);
