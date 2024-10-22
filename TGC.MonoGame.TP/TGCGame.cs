@@ -192,7 +192,7 @@ public class TGCGame : Game {
     player.Update(dt, keyboardState, CameraAngle);
     pendulum.Update(dt);
     coin.Update(dt);
-    CheckCollisions(dt, keyboardState);
+    CheckCollisions(dt, keyboardState, gameTime);
     CameraMovement(dt, keyboardState);
 
     base.Update(gameTime);
@@ -259,9 +259,10 @@ public class TGCGame : Game {
       CameraAngle += CameraRotationSpeed * dt;
   }
 
-  public void CheckCollisions(float dt, KeyboardState keyboardState) {
-    powerup.CheckCollision(player);
-    jpowerup.CheckCollision(player);
+  public void CheckCollisions(float dt, KeyboardState keyboardState,
+                              GameTime gameTime) {
+    powerup.CheckCollision(player, gameTime);
+    jpowerup.CheckCollision(player, gameTime);
 
     if (coin.Intersects(player.BoundingSphere)) {
       Points++;

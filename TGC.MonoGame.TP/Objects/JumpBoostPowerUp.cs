@@ -10,6 +10,10 @@ namespace TGC.MonoGame.TP.Objects {
 
 public class JumpBoostPowerUp : PowerUp {
   float Boost;
+  public override float duration {
+    get { return 10; }
+    set {}
+  }
 
   public JumpBoostPowerUp(GraphicsDevice graphicsDevice, Vector3 position,
                           float boost)
@@ -19,6 +23,10 @@ public class JumpBoostPowerUp : PowerUp {
 
   override public void Collided(Player player) {
     player.JumpBoost = player.JumpBoost * Boost;
+  }
+
+  override public void Deactivate(Player player) {
+    player.JumpBoost = player.JumpBoost / Boost;
   }
 }
 }
