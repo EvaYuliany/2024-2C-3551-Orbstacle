@@ -86,7 +86,7 @@ public class TGCGame : Game {
     rasterizerState.CullMode = CullMode.None;
     GraphicsDevice.RasterizerState = rasterizerState;
     player = new Player(GraphicsDevice, Vector3.Zero, Material.Metal, 1);
-
+    
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
                                Vector3.Up);
@@ -189,7 +189,7 @@ public class TGCGame : Game {
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
-    // MediaPlayer.Play(Song);
+    MediaPlayer.Play(Song);
 
     base.LoadContent();
   }
