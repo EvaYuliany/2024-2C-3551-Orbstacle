@@ -204,7 +204,7 @@ public class TGCGame : Game {
 
   protected override void Update(GameTime gameTime) {
     if (menu.IsActive)
-      menu.Update(gameTime);
+      menu.Update(gameTime, player);
     float dt = Convert.ToSingle(gameTime.ElapsedGameTime.TotalSeconds);
     var keyboardState = Keyboard.GetState();
 
@@ -236,7 +236,7 @@ public class TGCGame : Game {
     PlayerEffect.Parameters["View"].SetValue(View);
     PlayerEffect.Parameters["Projection"].SetValue(Projection);
     if (menu.IsActive)
-      menu.Draw(gameTime);
+      menu.Draw(gameTime, player);
     if (!menu.IsActive)
       player.Draw(PlayerEffect);
     pendulum.Draw(Effect);
