@@ -45,11 +45,15 @@ public class TGCGame : Game {
   private List<Color> sphereColors;
   private List<Color> cubeColors;
 
+  private Menu menu;
+
   private float CameraAngle = MathF.PI;
   private float CameraRotationSpeed = 5f;
   private float CameraDistanceToPlayer = 15f;
   private float CameraUpAngle = 0;
   private Vector3 GetCameraPosition(float angle) {
+    if (menu.IsActive)
+      return new Vector3(-50, 50, 50);
     return new Vector3(MathF.Cos(angle) * CameraDistanceToPlayer, 3,
                        MathF.Sin(angle) * CameraDistanceToPlayer);
   }
@@ -80,7 +84,6 @@ public class TGCGame : Game {
   private Model SkyBoxModel { get; set; }
   private Effect SkyBoxEffect { get; set; }
   private TextureCube SkyBoxTexture { get; set; }
-  private Menu menu;
 
   protected override void Initialize() {
     menu = new Menu(this);
