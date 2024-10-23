@@ -208,7 +208,7 @@ public class TGCGame : Game {
     var keyboardState = Keyboard.GetState();
 
     if (keyboardState.IsKeyDown(Keys.Escape))
-      Exit();
+      menu.IsActive = true;
 
     if (!menu.IsActive)
       player.Update(dt, keyboardState, CameraAngle);

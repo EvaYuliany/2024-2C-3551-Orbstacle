@@ -11,7 +11,7 @@ public class Menu {
   private SpriteFont font;
   private string[] menuItems = { "Iniciar Juego", "Material: ", "Salir" };
   private int selectedIndex = 0;
-  public bool IsActive { get; private set; }
+  public bool IsActive { get; set; }
 
   public Menu(TGCGame game) {
     this.game = game;
