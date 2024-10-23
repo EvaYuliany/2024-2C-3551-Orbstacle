@@ -191,8 +191,7 @@ public class TGCGame : Game {
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
-    PlayerEffect =
-        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+    PlayerEffect =  Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
