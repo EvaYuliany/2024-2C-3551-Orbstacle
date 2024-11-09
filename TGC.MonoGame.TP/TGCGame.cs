@@ -177,7 +177,7 @@ public class TGCGame : Game {
     jpowerup.Position += TrackPositions[3];
     pendulum.Position += TrackPositions[4];
     check.Position += TrackPositions[6] + Vector3.UnitY * 0.5f;
-
+    menu.Initialize(); 
     base.Initialize();
   }
 
@@ -267,8 +267,7 @@ public class TGCGame : Game {
       var position = spherePositions[i];
       var color = sphereColors[i];
 
-      Matrix worldMatrix =
-          Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
+      Matrix worldMatrix =  Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
       Effect.Parameters["World"].SetValue(worldMatrix);
       Effect.Parameters["DiffuseColor"].SetValue(
           color.ToVector3()); // Usar el color aleatorio
