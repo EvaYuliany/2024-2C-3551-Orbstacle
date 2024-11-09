@@ -7,11 +7,14 @@ using TGC.MonoGame.TP.Objects;
 
 namespace TGC.MonoGame.TP.MenuSpace {
 public class Menu {
+
   private TGCGame game;
   private SpriteFont font;
   private string[] menuItems = { "Iniciar Juego", "Material: ", "Salir" };
   private int selectedIndex = 0;
   public bool IsActive { get; set; }
+  private KeyboardState keyboardState;
+  private KeyboardState previousKeyboardState;
 
   public Menu(TGCGame game) {
     this.game = game;
@@ -20,27 +23,32 @@ public class Menu {
 
   public void Initialize() {
     // Inicialización de cualquier recurso aquí si es necesario
+
   }
 
   public void LoadContent() {
     // Cargar la fuente del menú
     font = game.Content.Load<SpriteFont>(TGCGame.ContentFolderSpriteFonts +
                                          "MenuFont");
+
   }
 
   public void Update(GameTime gameTime, Player player) {
-    var keyboardState = Keyboard.GetState();
+    keyboardState = Keyboard.GetState();
 
-    if (keyboardState.IsKeyDown(Keys.Down)) {
+    if (keyboardState.IsKeyDown(Keys.Down) && previousKeyboardState.IsKeyUp(Keys.Down)) {
       selectedIndex = (selectedIndex + 1) % menuItems.Length;
     }
-    if (keyboardState.IsKeyDown(Keys.Up)) {
+    if (keyboardState.IsKeyDown(Keys.Up) && previousKeyboardState.IsKeyUp(Keys.Up)) {
       selectedIndex = (selectedIndex - 1 + menuItems.Length) % menuItems.Length;
     }
 
-    if (keyboardState.IsKeyDown(Keys.Enter)) {
+    if (keyboardState.IsKeyDown(Keys.Enter) && previousKeyboardState.IsKeyUp(Keys.Enter)) {
       Select(player);
+
     }
+    previousKeyboardState = keyboardState;
+
   }
 
   private Material GetNextMaterial(Material m) {
@@ -78,7 +86,7 @@ public class Menu {
     menuItems[1] = "Material: " + MaterialToString(player.Material);
     for (int i = 0; i < menuItems.Length; i++) {
       var color = (i == selectedIndex)
-                      ? Color.Yellow
+                      ? Color.BlueViolet
                       : Color.White; // Resaltar la opción seleccionada
       spriteBatch.DrawString(font, menuItems[i], new Vector2(100, 100 + i * 50),
                              color);
