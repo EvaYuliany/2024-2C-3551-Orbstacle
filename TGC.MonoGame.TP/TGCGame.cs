@@ -292,8 +292,7 @@ public class TGCGame : Game {
       CameraAngle += CameraRotationSpeed * dt;
   }
 
-  public void CheckCollisions(float dt, KeyboardState keyboardState,
-                              GameTime gameTime) {
+  public void CheckCollisions(float dt, KeyboardState keyboardState, GameTime gameTime) {
     powerup.CheckCollision(player, gameTime);
     jpowerup.CheckCollision(player, gameTime);
 

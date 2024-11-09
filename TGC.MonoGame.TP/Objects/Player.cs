@@ -23,23 +23,23 @@ public class Player : IDisposable {
 
   MaterialProperties PlasticProperties =
       new MaterialProperties { jump_boost = 40f,
-                               acceleration = 20f,
+                               acceleration = 40f,
                                friction = 5f,
                                max_speed = 50f,
                                restitution_coeficient = 0.8f,
                                color = Color.Red };
 
   MaterialProperties MetalProperties =
-      new MaterialProperties { jump_boost = 15f,
-                               acceleration = 10f,
+      new MaterialProperties { jump_boost = 20f,
+                               acceleration = 25f,
                                friction = 8f,
                                max_speed = 30f,
                                restitution_coeficient = 0.8f,
                                color = Color.Blue };
 
   MaterialProperties RubberProperties =
-      new MaterialProperties { jump_boost = 50f,
-                               acceleration = 15f,
+      new MaterialProperties { jump_boost = 35f,
+                               acceleration = 35f,
                                friction = 6f,
                                max_speed = 40f,
                                restitution_coeficient = 0.8f,
