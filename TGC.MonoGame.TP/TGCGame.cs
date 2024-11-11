@@ -191,7 +191,8 @@ public class TGCGame : Game {
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
-    PlayerEffect =  Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+    PlayerEffect =
+        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
@@ -306,7 +307,7 @@ public class TGCGame : Game {
     }
 
     if (pendulum.Intersects(player.BoundingSphere)) {
-      player.Velocity += Vector3.UnitX * pendulum.Speed * 2;
+      player.Velocity += Vector3.UnitX * pendulum.Speed * 3;
     }
 
     if (check.Intersects(player.BoundingSphere)) {
@@ -321,10 +322,20 @@ public class TGCGame : Game {
         player.Jump();
       }
 
-      if (player.Velocity.Y < 0.1)
+      if (player.Velocity.Y < 0) {
         player.Velocity =
-            Vector3.Reflect(player.Velocity, IntersectingFloor.Normal) *
-            player.RestitutionCoeficient;
+            Vector3.Reflect(player.Velocity * player.RestitutionCoeficient,
+                            IntersectingFloor.Normal);
+      }
+
+      if (player.Velocity.Y >= 0) {
+        player.Velocity += Vector3.UnitY * player.RestitutionCoeficient;
+        Vector3 grav = Gravity * Vector3.UnitY;
+        Vector3 acc = grav - (Vector3.Dot(IntersectingFloor.Normal, grav) *
+                              IntersectingFloor.Normal);
+        player.Velocity += acc * dt;
+      player.Velocity.Y -= Gravity * dt;
+      }
 
     } else {
       player.Velocity.Y -= Gravity * dt;
