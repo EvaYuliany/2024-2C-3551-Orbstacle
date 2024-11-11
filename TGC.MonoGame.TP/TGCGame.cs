@@ -84,6 +84,7 @@ public class TGCGame : Game {
   private Model SkyBoxModel { get; set; }
   private Effect SkyBoxEffect { get; set; }
   private TextureCube SkyBoxTexture { get; set; }
+  private Texture2D NormalMap {get; set;}
 
   protected override void Initialize() {
     menu = new Menu(this);
@@ -187,6 +188,7 @@ public class TGCGame : Game {
     SkyBoxTexture =
         Content.Load<TextureCube>(ContentFolderTextures + ("skybo" + "x"));
     SkyBox = new SkyBox(SkyBoxModel, SkyBoxTexture, SkyBoxEffect);
+    NormalMap = Content.Load<Texture2D>(ContentFolderTextures + "adoquin"); 
 
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
@@ -197,6 +199,7 @@ public class TGCGame : Game {
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
     MediaPlayer.Play(Song);
+    Effect.Parameters["NormalTexture"].SetValue(NormalMap);
 
     menu.LoadContent();
     base.LoadContent();
@@ -241,7 +244,9 @@ public class TGCGame : Game {
       player.Draw(PlayerEffect);
     pendulum.Draw(Effect);
 
+    Effect.Parameters["LightDirection"].SetValue(new Vector3(0, -1, 0));
     FloorConstructor.Draw(Effect);
+
     powerup.Draw(Effect);
     jpowerup.Draw(Effect);
     check.Draw(Effect);
