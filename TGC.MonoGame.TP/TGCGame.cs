@@ -177,7 +177,7 @@ public class TGCGame : Game {
     jpowerup.Position += TrackPositions[3];
     pendulum.Position += TrackPositions[4];
     check.Position += TrackPositions[6] + Vector3.UnitY * 0.5f;
-    menu.Initialize(); 
+    menu.Initialize();
     base.Initialize();
   }
 
@@ -268,7 +268,8 @@ public class TGCGame : Game {
       var position = spherePositions[i];
       var color = sphereColors[i];
 
-      Matrix worldMatrix =  Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
+      Matrix worldMatrix =
+          Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
       Effect.Parameters["World"].SetValue(worldMatrix);
       Effect.Parameters["DiffuseColor"].SetValue(
           color.ToVector3()); // Usar el color aleatorio
@@ -292,7 +293,8 @@ public class TGCGame : Game {
       CameraAngle += CameraRotationSpeed * dt;
   }
 
-  public void CheckCollisions(float dt, KeyboardState keyboardState, GameTime gameTime) {
+  public void CheckCollisions(float dt, KeyboardState keyboardState,
+                              GameTime gameTime) {
     powerup.CheckCollision(player, gameTime);
     jpowerup.CheckCollision(player, gameTime);
 
@@ -321,9 +323,13 @@ public class TGCGame : Game {
       }
 
       if (player.Velocity.Y < 0) {
-        player.Velocity =
-            Vector3.Reflect(player.Velocity * player.RestitutionCoeficient,
-                            IntersectingFloor.Normal);
+        player.Velocity.X =
+            Vector3.Reflect(player.Velocity, IntersectingFloor.Normal).X;
+        player.Velocity.Y =
+            Vector3
+                .Reflect(player.Velocity * player.RestitutionCoeficient,
+                         IntersectingFloor.Normal)
+                .Y;
       }
 
       if (player.Velocity.Y >= 0) {
@@ -332,7 +338,7 @@ public class TGCGame : Game {
         Vector3 acc = grav - (Vector3.Dot(IntersectingFloor.Normal, grav) *
                               IntersectingFloor.Normal);
         player.Velocity += acc * dt;
-      player.Velocity.Y -= Gravity * dt;
+        player.Velocity.Y -= Gravity * dt;
       }
 
     } else {
