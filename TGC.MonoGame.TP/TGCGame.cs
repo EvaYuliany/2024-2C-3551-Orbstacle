@@ -206,6 +206,7 @@ public class TGCGame : Game {
     PlayerEffect.Parameters["KDiffuse"].SetValue(1.0f);
     PlayerEffect.Parameters["KSpecular"].SetValue(0.8f);
     PlayerEffect.Parameters["shininess"].SetValue(16.0f);
+    PlayerEffect.Parameters["baseTexture"].SetValue(NormalMap);
 
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
