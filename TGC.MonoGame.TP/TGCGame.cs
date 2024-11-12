@@ -193,13 +193,14 @@ public class TGCGame : Game {
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
+    Effect.CurrentTechnique = Effect.Techniques["NormalMapping"];
+
     PlayerEffect =
         Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
-    MediaPlayer.Play(Song);
-    Effect.Parameters["NormalTexture"].SetValue(NormalMap);
+   // MediaPlayer.Play(Song);
 
     menu.LoadContent();
     base.LoadContent();
@@ -216,7 +217,7 @@ public class TGCGame : Game {
 
     if (!menu.IsActive)
       player.Update(dt, keyboardState, CameraAngle);
-    pendulum.Update(dt);
+      pendulum.Update(dt);
     for (int i = 0; i < coins.Count; i++) {
       coins[i].Update(dt);
     }
@@ -235,6 +236,8 @@ public class TGCGame : Game {
     GraphicsDevice.Clear(Color.Black);
     Effect.Parameters["View"].SetValue(View);
     Effect.Parameters["Projection"].SetValue(Projection);
+    Effect.Parameters["LightDirection"].SetValue(Vector3.Normalize(new Vector3(0, -1, 0)));
+    Effect.Parameters["NormalTexture"].SetValue(NormalMap);
 
     PlayerEffect.Parameters["View"].SetValue(View);
     PlayerEffect.Parameters["Projection"].SetValue(Projection);
