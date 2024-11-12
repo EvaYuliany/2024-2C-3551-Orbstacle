@@ -100,3 +100,14 @@
 /processorParam:TextureFormat=Color
 /build:Textures/adoquin.jpg
 
+#begin Textures/tiling-normal.png
+/importer:TextureImporter
+/processor:TextureProcessor
+/processorParam:ColorKeyColor=255,0,255,255
+/processorParam:ColorKeyEnabled=True
+/processorParam:GenerateMipmaps=True
+/processorParam:PremultiplyAlpha=True
+/processorParam:ResizeToPowerOfTwo=False
+/processorParam:MakeSquare=True
+/processorParam:TextureFormat=Color
+/build:Textures/tiling-normal.png
