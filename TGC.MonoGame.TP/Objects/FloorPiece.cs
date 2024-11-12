@@ -32,8 +32,9 @@ public class Floor : IDisposable {
                              Matrix.CreateRotationY(Rotation.Y) *
                              Matrix.CreateRotationZ(Rotation.Z);
 
-    Normal = Vector3.Normalize(Vector3.Transform(Vector3.UnitY, rotation_matrix) + 
-             Vector3.UnitY * scale.Y * 0.5f);
+    Normal =
+        Vector3.Normalize(Vector3.Transform(Vector3.UnitY, rotation_matrix) +
+                          Vector3.UnitY * scale.Y * 0.5f);
     ;
 
     Vector3 bb = scale * 0.5f;
@@ -41,13 +42,18 @@ public class Floor : IDisposable {
         new BoundingBox(Translation - bb, Translation + bb));
   }
 
-  public void Draw(Effect Effect) {
-    Effect.Parameters["DiffuseColor"].SetValue(Color);
-    Effect.Parameters["World"].SetValue(Matrix.CreateScale(Scale) *
-                                        Matrix.CreateRotationX(Rotation.X) *
-                                        Matrix.CreateRotationY(Rotation.Y) *
-                                        Matrix.CreateRotationZ(Rotation.Z) *
-                                        Matrix.CreateTranslation(Translation));
+  public void Draw(Effect Effect, Matrix View, Matrix Projection) {
+    Matrix worldMatrix = Matrix.CreateScale(Scale) *
+                         Matrix.CreateRotationX(Rotation.X) *
+                         Matrix.CreateRotationY(Rotation.Y) *
+                         Matrix.CreateRotationZ(Rotation.Z) *
+                         Matrix.CreateTranslation(Translation);
+    Effect.Parameters["BaseColor"].SetValue(Color);
+    Effect.Parameters["InverseTransposeWorld"].SetValue(
+        Matrix.Transpose(Matrix.Invert(worldMatrix)));
+    Effect.Parameters["WorldViewProjection"].SetValue(worldMatrix * View *
+                                                      Projection);
+    Effect.Parameters["World"].SetValue(worldMatrix);
     Cube.Draw(Effect);
   }
 

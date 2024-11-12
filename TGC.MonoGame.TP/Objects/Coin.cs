@@ -34,13 +34,17 @@ public class Coin : IDisposable {
 
   public void Update(float dt) { Rotation += RotationSpeed * dt; }
 
-  public void Draw(Effect Effect) {
+  public void Draw(Effect Effect, Matrix View, Matrix Projection) {
     var color = Color.Gold;
     Matrix worldMatrix = Matrix.CreateRotationZ(MathF.PI / 2) *
                          Matrix.CreateRotationY(Rotation) *
                          Matrix.CreateTranslation(Position);
     Effect.Parameters["World"].SetValue(worldMatrix);
-    Effect.Parameters["DiffuseColor"].SetValue(color.ToVector3());
+    Effect.Parameters["InverseTransposeWorld"].SetValue(
+        Matrix.Transpose(Matrix.Invert(worldMatrix)));
+    Effect.Parameters["WorldViewProjection"].SetValue(worldMatrix * View *
+                                                      Projection);
+    Effect.Parameters["BaseColor"].SetValue(color.ToVector3());
     Model.Draw(Effect);
   }
 

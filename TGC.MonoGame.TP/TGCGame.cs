@@ -32,12 +32,12 @@ public class TGCGame : Game {
 
   private GraphicsDeviceManager Graphics;
 
-  private Effect Effect;
+  private Effect NormalEffect;
   private Matrix View;
   private Matrix Projection;
 
   private Vector3 PlayerInitialPos = Vector3.Zero;
-  private Effect PlayerEffect;
+  private Effect BlinnEffect;
   private Player player;
   private Song Song { get; set; }
   private List<Vector3> cubePositions;
@@ -84,7 +84,7 @@ public class TGCGame : Game {
   private Model SkyBoxModel { get; set; }
   private Effect SkyBoxEffect { get; set; }
   private TextureCube SkyBoxTexture { get; set; }
-  private Texture2D NormalMap {get; set;}
+  private Texture2D NormalMap { get; set; }
 
   protected override void Initialize() {
     menu = new Menu(this);
@@ -188,18 +188,30 @@ public class TGCGame : Game {
     SkyBoxTexture =
         Content.Load<TextureCube>(ContentFolderTextures + ("skybo" + "x"));
     SkyBox = new SkyBox(SkyBoxModel, SkyBoxTexture, SkyBoxEffect);
-    NormalMap = Content.Load<Texture2D>(ContentFolderTextures + "adoquin"); 
+    NormalMap = Content.Load<Texture2D>(ContentFolderTextures + "adoquin");
 
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
-    Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
-    PlayerEffect =
-        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+    NormalEffect =
+        Content.Load<Effect>(ContentFolderEffects + ("NormalShade" + "r"));
+
+    BlinnEffect =
+        Content.Load<Effect>(ContentFolderEffects + "BlinnPhongShader");
+    BlinnEffect.Parameters["lightPosition"].SetValue(new Vector3(0, 100, 0));
+    BlinnEffect.Parameters["ambientColor"].SetValue(new Vector3(1, 1, 1));
+    BlinnEffect.Parameters["diffuseColor"].SetValue(
+        new Vector3(0.9f, 0.5f, 0.1f));
+    BlinnEffect.Parameters["specularColor"].SetValue(new Vector3(1, 1, 1));
+    BlinnEffect.Parameters["KAmbient"].SetValue(0.2f);
+    BlinnEffect.Parameters["KDiffuse"].SetValue(1.0f);
+    BlinnEffect.Parameters["KSpecular"].SetValue(0.8f);
+    BlinnEffect.Parameters["shininess"].SetValue(16.0f);
+
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
     MediaPlayer.Play(Song);
-    Effect.Parameters["NormalTexture"].SetValue(NormalMap);
+    NormalEffect.Parameters["NormalTexture"].SetValue(NormalMap);
 
     menu.LoadContent();
     base.LoadContent();
@@ -224,6 +236,8 @@ public class TGCGame : Game {
       CheckCollisions(dt, keyboardState, gameTime);
       CameraMovement(dt, keyboardState);
     }
+    BlinnEffect.Parameters["eyePosition"].SetValue(
+        GetCameraPosition(CameraAngle));
 
     base.Update(gameTime);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
@@ -233,52 +247,51 @@ public class TGCGame : Game {
 
   protected override void Draw(GameTime gameTime) {
     GraphicsDevice.Clear(Color.Black);
-    Effect.Parameters["View"].SetValue(View);
-    Effect.Parameters["Projection"].SetValue(Projection);
+    NormalEffect.Parameters["View"].SetValue(View);
+    NormalEffect.Parameters["Projection"].SetValue(Projection);
+    NormalEffect.Parameters["LightDirection"].SetValue(new Vector3(0, -1, 0));
 
-    PlayerEffect.Parameters["View"].SetValue(View);
-    PlayerEffect.Parameters["Projection"].SetValue(Projection);
     if (menu.IsActive)
       menu.Draw(gameTime, player);
     if (!menu.IsActive)
-      player.Draw(PlayerEffect);
-    pendulum.Draw(Effect);
+      player.Draw(BlinnEffect, View, Projection);
+    pendulum.Draw(BlinnEffect, View, Projection);
 
-    Effect.Parameters["LightDirection"].SetValue(new Vector3(0, -1, 0));
-    FloorConstructor.Draw(Effect);
+    FloorConstructor.Draw(BlinnEffect, View, Projection);
 
-    powerup.Draw(Effect);
-    jpowerup.Draw(Effect);
-    check.Draw(Effect);
+    powerup.Draw(BlinnEffect, View, Projection);
+    jpowerup.Draw(BlinnEffect, View, Projection);
+    check.Draw(BlinnEffect, View, Projection);
     for (int i = 0; i < coins.Count; i++) {
-      coins[i].Draw(Effect);
+      coins[i].Draw(BlinnEffect, View, Projection);
     }
-
-    Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
-        new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
 
     for (int i = 0; i < cubePositions.Count; i++) {
       var position = cubePositions[i];
       var color = cubeColors[i];
 
-      Matrix worldMatrix =
-          Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
-      Effect.Parameters["World"].SetValue(worldMatrix);
-      Effect.Parameters["DiffuseColor"].SetValue(
-          color.ToVector3()); // Usar el color aleatorio
-      Cube.Draw(Effect);
+      Matrix worldMatrix = Matrix.CreateTranslation(position);
+      BlinnEffect.Parameters["World"].SetValue(worldMatrix);
+      BlinnEffect.Parameters["InverseTransposeWorld"].SetValue(
+          Matrix.Transpose(Matrix.Invert(worldMatrix)));
+      BlinnEffect.Parameters["WorldViewProjection"].SetValue(worldMatrix *
+                                                             View * Projection);
+      BlinnEffect.Parameters["BaseColor"].SetValue(color.ToVector3());
+      Cube.Draw(BlinnEffect);
     }
 
     for (int i = 0; i < spherePositions.Count; i++) {
       var position = spherePositions[i];
       var color = sphereColors[i];
 
-      Matrix worldMatrix =
-          Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
-      Effect.Parameters["World"].SetValue(worldMatrix);
-      Effect.Parameters["DiffuseColor"].SetValue(
-          color.ToVector3()); // Usar el color aleatorio
-      Sphere.Draw(Effect);
+      Matrix worldMatrix = Matrix.CreateTranslation(position);
+      BlinnEffect.Parameters["World"].SetValue(worldMatrix);
+      BlinnEffect.Parameters["InverseTransposeWorld"].SetValue(
+          Matrix.Transpose(Matrix.Invert(worldMatrix)));
+      BlinnEffect.Parameters["WorldViewProjection"].SetValue(worldMatrix *
+                                                             View * Projection);
+      BlinnEffect.Parameters["BaseColor"].SetValue(color.ToVector3());
+      Sphere.Draw(BlinnEffect);
     }
     if (!menu.IsActive)
       SkyBox.Draw(View, Projection, GetCameraPosition(CameraUpAngle));
@@ -351,7 +364,7 @@ public class TGCGame : Game {
     }
 
     if (player.Position.Y <= RestartingY) {
-      // clear powerups...
+      player.SetMaterial(player.Material);
       player.Position = PlayerInitialPos;
       player.Velocity = Vector3.Zero;
     }
