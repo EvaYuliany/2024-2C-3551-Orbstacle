@@ -84,7 +84,7 @@ public class TGCGame : Game {
   private Model SkyBoxModel { get; set; }
   private Effect SkyBoxEffect { get; set; }
   private TextureCube SkyBoxTexture { get; set; }
-  private Texture2D NormalMap {get; set;}
+  private Texture2D NormalMap { get; set; }
 
   protected override void Initialize() {
     menu = new Menu(this);
@@ -188,13 +188,25 @@ public class TGCGame : Game {
     SkyBoxTexture =
         Content.Load<TextureCube>(ContentFolderTextures + ("skybo" + "x"));
     SkyBox = new SkyBox(SkyBoxModel, SkyBoxTexture, SkyBoxEffect);
-    NormalMap = Content.Load<Texture2D>(ContentFolderTextures + "adoquin"); 
+    NormalMap = Content.Load<Texture2D>(ContentFolderTextures + "adoquin");
 
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
     Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
+
     PlayerEffect =
-        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+        Content.Load<Effect>(ContentFolderEffects + "BlinnPhongShader");
+    PlayerEffect.Parameters["lightPosition"].SetValue(new Vector3(0, 1, 0));
+    PlayerEffect.Parameters["ambientColor"].SetValue(
+        new Vector3(0.25f, 0.0f, 0.0f));
+    PlayerEffect.Parameters["diffuseColor"].SetValue(
+        new Vector3(0.1f, 0.1f, 0.6f));
+    PlayerEffect.Parameters["specularColor"].SetValue(new Vector3(1f, 1f, 1f));
+    PlayerEffect.Parameters["KAmbient"].SetValue(0.1f);
+    PlayerEffect.Parameters["KDiffuse"].SetValue(1.0f);
+    PlayerEffect.Parameters["KSpecular"].SetValue(0.8f);
+    PlayerEffect.Parameters["shininess"].SetValue(16.0f);
+
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
@@ -224,6 +236,8 @@ public class TGCGame : Game {
       CheckCollisions(dt, keyboardState, gameTime);
       CameraMovement(dt, keyboardState);
     }
+    PlayerEffect.Parameters["eyePosition"].SetValue(
+        GetCameraPosition(CameraAngle));
 
     base.Update(gameTime);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
@@ -236,12 +250,10 @@ public class TGCGame : Game {
     Effect.Parameters["View"].SetValue(View);
     Effect.Parameters["Projection"].SetValue(Projection);
 
-    PlayerEffect.Parameters["View"].SetValue(View);
-    PlayerEffect.Parameters["Projection"].SetValue(Projection);
     if (menu.IsActive)
       menu.Draw(gameTime, player);
     if (!menu.IsActive)
-      player.Draw(PlayerEffect);
+      player.Draw(PlayerEffect, View, Projection);
     pendulum.Draw(Effect);
 
     Effect.Parameters["LightDirection"].SetValue(new Vector3(0, -1, 0));
