@@ -99,9 +99,9 @@ public class FloorConstructor : IDisposable {
     return translation + Vector3.UnitY * FloorThickness * FloorUnit / 2;
   }
 
-  public void Draw(Effect Effect) {
+  public void Draw(Effect Effect, Matrix View, Matrix Projection) {
     for (int i = 0; i < Floors.Count; i++) {
-      Floors[i].Draw(Effect);
+      Floors[i].Draw(Effect, View, Projection);
     }
   }
 

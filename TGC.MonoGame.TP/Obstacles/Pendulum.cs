@@ -86,12 +86,20 @@ public class Pendulum : IDisposable {
     return BoundingSphere.Intersects(m);
   }
 
-  public void Draw(Effect Effect) {
-    Effect.Parameters["DiffuseColor"].SetValue(RodColor.ToVector3());
+  public void Draw(Effect Effect,Matrix View,Matrix Projection) {
+    Effect.Parameters["BaseColor"].SetValue(RodColor.ToVector3());
+    Effect.Parameters["InverseTransposeWorld"].SetValue(
+        Matrix.Transpose(Matrix.Invert(RodWorld)));
+    Effect.Parameters["WorldViewProjection"].SetValue(RodWorld * View *
+                                                      Projection);
     Effect.Parameters["World"].SetValue(RodWorld);
     RodModel.Draw(Effect);
 
-    Effect.Parameters["DiffuseColor"].SetValue(BallColor.ToVector3());
+    Effect.Parameters["BaseColor"].SetValue(BallColor.ToVector3());
+    Effect.Parameters["InverseTransposeWorld"].SetValue(
+        Matrix.Transpose(Matrix.Invert(BallWorld)));
+    Effect.Parameters["WorldViewProjection"].SetValue(BallWorld * View *
+                                                      Projection);
     Effect.Parameters["World"].SetValue(BallWorld);
     BallModel.Draw(Effect);
 

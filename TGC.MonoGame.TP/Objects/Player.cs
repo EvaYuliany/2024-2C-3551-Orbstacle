@@ -47,7 +47,7 @@ public class Player : IDisposable {
 
   private SpherePrimitive Model;
   public BoundingSphere BoundingSphere;
-  private Matrix World;
+  private Matrix World = Matrix.Identity;
 
   public Vector3 Position;
   public Vector3 Velocity = Vector3.Zero;
@@ -106,13 +106,12 @@ public class Player : IDisposable {
         Velocity.Z -= dt * Friction;
     }
 
-    Position +=
-        new Vector3(Velocity.X > 0 ? MathF.Min(Velocity.X, MaxSpeed)
-                                   : MathF.Max(Velocity.X, -MaxSpeed),
-                    Velocity.Y,
-                    Velocity.Z > 0 ? MathF.Min(Velocity.Z, MaxSpeed)
-                                   : MathF.Max(Velocity.Z, -MaxSpeed)) *
-        dt;
+    Position += new Vector3(Velocity.X > 0 ? MathF.Min(Velocity.X, MaxSpeed)
+                                           : MathF.Max(Velocity.X, -MaxSpeed),
+                            Velocity.Y,
+                            Velocity.Z > 0 ? MathF.Min(Velocity.Z, MaxSpeed)
+                                           : MathF.Max(Velocity.Z, -MaxSpeed)) *
+                dt;
 
     World = Matrix.CreateRotationX(Position.Z) *
             Matrix.CreateRotationZ(-Position.X) *
@@ -122,9 +121,13 @@ public class Player : IDisposable {
 
   public void Jump() { Velocity.Y = JumpBoost; }
 
-  public void Draw(Effect Effect) {
+  public void Draw(Effect Effect, Matrix View, Matrix Projection) {
+    Effect.Parameters["InverseTransposeWorld"].SetValue(
+        Matrix.Transpose(Matrix.Invert(World)));
+    Effect.Parameters["WorldViewProjection"].SetValue(World * View *
+                                                      Projection);
     Effect.Parameters["World"].SetValue(World);
-    Effect.Parameters["DiffuseColor"].SetValue(Color.ToVector3());
+    Effect.Parameters["BaseColor"].SetValue(Color.ToVector3());
     Model.Draw(Effect);
   }
 

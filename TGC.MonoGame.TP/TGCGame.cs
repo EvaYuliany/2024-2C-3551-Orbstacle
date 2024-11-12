@@ -32,12 +32,12 @@ public class TGCGame : Game {
 
   private GraphicsDeviceManager Graphics;
 
-  private Effect Effect;
+  private Effect NormalEffect;
   private Matrix View;
   private Matrix Projection;
 
   private Vector3 PlayerInitialPos = Vector3.Zero;
-  private Effect PlayerEffect;
+  private Effect BlinnEffect;
   private Player player;
   private Song Song { get; set; }
   private List<Vector3> cubePositions;
@@ -84,7 +84,8 @@ public class TGCGame : Game {
   private Model SkyBoxModel { get; set; }
   private Effect SkyBoxEffect { get; set; }
   private TextureCube SkyBoxTexture { get; set; }
-  private Texture2D NormalMap {get; set;}
+  private Texture2D NormalMap { get; set; }
+  private Texture2D FloorNormalMap { get; set; }
 
   protected override void Initialize() {
     menu = new Menu(this);
@@ -178,33 +179,42 @@ public class TGCGame : Game {
     jpowerup.Position += TrackPositions[3];
     pendulum.Position += TrackPositions[4];
     check.Position += TrackPositions[6] + Vector3.UnitY * 0.5f;
-    menu.Initialize(); 
+    menu.Initialize();
     base.Initialize();
   }
 
-  protected override void LoadContent() {
+ protected override void LoadContent() {
     SkyBoxEffect = Content.Load<Effect>(ContentFolderEffects + "SkyBox");
     SkyBoxModel = Content.Load<Model>(ContentFolder3D + "skybox/cube");
-    SkyBoxTexture =
-        Content.Load<TextureCube>(ContentFolderTextures + ("skybo" + "x"));
+    SkyBoxTexture = Content.Load<TextureCube>(ContentFolderTextures + "skybox");
     SkyBox = new SkyBox(SkyBoxModel, SkyBoxTexture, SkyBoxEffect);
-    NormalMap = Content.Load<Texture2D>(ContentFolderTextures + "tiling-normal");
-
+    
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
-    Effect = Content.Load<Effect>(ContentFolderEffects + "BasicShader");
 
-    PlayerEffect =
-        Content.Load<Effect>(ContentFolderEffects + ("PlayerShade" + "r"));
+    BlinnEffect = Content.Load<Effect>(ContentFolderEffects + "BlinnPhongShader");
+    BlinnEffect.Parameters["lightPosition"].SetValue(new Vector3(0, 100, 0));
+    BlinnEffect.Parameters["ambientColor"].SetValue(new Vector3(1, 1, 1));
+    BlinnEffect.Parameters["diffuseColor"].SetValue(new Vector3(0.9f, 0.5f, 0.1f));
+    BlinnEffect.Parameters["specularColor"].SetValue(new Vector3(1, 1, 1));
+    BlinnEffect.Parameters["KAmbient"].SetValue(0.2f);
+    BlinnEffect.Parameters["KDiffuse"].SetValue(1.0f);
+    BlinnEffect.Parameters["KSpecular"].SetValue(0.8f);
+    BlinnEffect.Parameters["shininess"].SetValue(16.0f);
+
+    NormalEffect = Content.Load<Effect>(ContentFolderEffects + "NormalShader");
+    NormalMap = Content.Load<Texture2D>(ContentFolderTextures + "tiling-normal");
+    FloorNormalMap = Content.Load<Texture2D>(ContentFolderTextures + "tiling-normal");
+
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
     MediaPlayer.Play(Song);
 
+   
     menu.LoadContent();
     base.LoadContent();
-  }
-
+}
   protected override void Update(GameTime gameTime) {
     if (menu.IsActive)
       menu.Update(gameTime, player);
@@ -224,6 +234,8 @@ public class TGCGame : Game {
       CheckCollisions(dt, keyboardState, gameTime);
       CameraMovement(dt, keyboardState);
     }
+    BlinnEffect.Parameters["eyePosition"].SetValue(
+        GetCameraPosition(CameraAngle));
 
     base.Update(gameTime);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
@@ -231,59 +243,53 @@ public class TGCGame : Game {
                                Vector3.Up);
   }
 
-  protected override void Draw(GameTime gameTime) {
+ protected override void Draw(GameTime gameTime) {
     GraphicsDevice.Clear(Color.Black);
-    Effect.Parameters["View"].SetValue(View);
-    Effect.Parameters["Projection"].SetValue(Projection);
-    Effect.Parameters["LightDirection"].SetValue(Vector3.Normalize(new Vector3(0, -1, 0)));
-    Effect.Parameters["NormalTexture"]?.SetValue(NormalMap);
 
-    PlayerEffect.Parameters["View"].SetValue(View);
-    PlayerEffect.Parameters["Projection"].SetValue(Projection);
-    if (menu.IsActive)
-      menu.Draw(gameTime, player);
-    if (!menu.IsActive)
-      player.Draw(PlayerEffect);
-    pendulum.Draw(Effect);
-    Effect.CurrentTechnique = Effect.Techniques["NormalMapping"];
-    Effect.Parameters["LightDirection"].SetValue(new Vector3(0, -1, 0));
-    FloorConstructor.Draw(Effect);
+    NormalEffect.Parameters["WorldViewProjection"].SetValue(View * Projection);
+    NormalEffect.Parameters["World"].SetValue(Matrix.Identity); // Ajusta esto a la matriz del objeto
+    NormalEffect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(Matrix.Identity))); // Ajustar según la orientación
+    NormalEffect.Parameters["ambientColor"].SetValue(new Vector3(1, 1, 1));
+    NormalEffect.Parameters["diffuseColor"].SetValue(new Vector3(0.9f, 0.5f, 0.1f));
+    NormalEffect.Parameters["specularColor"].SetValue(new Vector3(1, 1, 1));
+    NormalEffect.Parameters["KAmbient"].SetValue(0.2f);
+    NormalEffect.Parameters["KDiffuse"].SetValue(1.0f);
+    NormalEffect.Parameters["KSpecular"].SetValue(0.8f);
+    NormalEffect.Parameters["shininess"].SetValue(16.0f);
+    NormalEffect.Parameters["lightPosition"].SetValue(new Vector3(0, 100, 0));
+    NormalEffect.Parameters["eyePosition"].SetValue(GetCameraPosition(CameraAngle)); // Ajustar según la cámara
+    NormalEffect.Parameters["Tiling"].SetValue(new Vector2(1, 1)); // Ajustar si es necesario
 
-    powerup.Draw(Effect);
-    jpowerup.Draw(Effect);
-    check.Draw(Effect);
-    for (int i = 0; i < coins.Count; i++) {
-      coins[i].Draw(Effect);
+    // Asignar las texturas
+    NormalEffect.Parameters["ModelTexture"].SetValue(NormalMap);
+    NormalEffect.Parameters["NormalTexture"].SetValue(FloorNormalMap); // Para el mapa de normales del piso
+
+
+    if (menu.IsActive) {
+        menu.Draw(gameTime, player);
+    } else {
+        player.Draw(BlinnEffect, View, Projection);
+    }
+    
+    pendulum.Draw(BlinnEffect, View, Projection);
+    FloorConstructor.Draw(NormalEffect, View, Projection);
+    powerup.Draw(BlinnEffect, View, Projection);
+    jpowerup.Draw(BlinnEffect, View, Projection);
+    check.Draw(BlinnEffect, View, Projection);
+
+    // Dibujar Coins con BlinnEffect
+    foreach (var coin in coins) {
+        coin.Draw(BlinnEffect, View, Projection);
     }
 
-    Effect.Parameters["World"].SetValue(Matrix.CreateTranslation(
-        new Vector3(2, 0, 2))); // Ajusta la posición si es necesario
 
-    for (int i = 0; i < cubePositions.Count; i++) {
-      var position = cubePositions[i];
-      var color = cubeColors[i];
 
-      Matrix worldMatrix =
-          Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
-      Effect.Parameters["World"].SetValue(worldMatrix);
-      Effect.Parameters["DiffuseColor"].SetValue(
-          color.ToVector3()); // Usar el color aleatorio
-      Cube.Draw(Effect);
+
+    if (!menu.IsActive) {
+        SkyBox.Draw(View, Projection, GetCameraPosition(CameraAngle));
     }
+}
 
-    for (int i = 0; i < spherePositions.Count; i++) {
-      var position = spherePositions[i];
-      var color = sphereColors[i];
-
-      Matrix worldMatrix =  Matrix.CreateScale(1f) * Matrix.CreateTranslation(position);
-      Effect.Parameters["World"].SetValue(worldMatrix);
-      Effect.Parameters["DiffuseColor"].SetValue(
-          color.ToVector3()); // Usar el color aleatorio
-      Sphere.Draw(Effect);
-    }
-    if (!menu.IsActive)
-      SkyBox.Draw(View, Projection, GetCameraPosition(CameraUpAngle));
-  }
 
   public void CameraMovement(float dt, KeyboardState keyboardState) {
     if (keyboardState.IsKeyDown(Keys.Up))
@@ -299,7 +305,8 @@ public class TGCGame : Game {
       CameraAngle += CameraRotationSpeed * dt;
   }
 
-  public void CheckCollisions(float dt, KeyboardState keyboardState, GameTime gameTime) {
+  public void CheckCollisions(float dt, KeyboardState keyboardState,
+                              GameTime gameTime) {
     powerup.CheckCollision(player, gameTime);
     jpowerup.CheckCollision(player, gameTime);
 
@@ -328,9 +335,13 @@ public class TGCGame : Game {
       }
 
       if (player.Velocity.Y < 0) {
-        player.Velocity =
-            Vector3.Reflect(player.Velocity * player.RestitutionCoeficient,
-                            IntersectingFloor.Normal);
+        player.Velocity.X =
+            Vector3.Reflect(player.Velocity, IntersectingFloor.Normal).X;
+        player.Velocity.Y =
+            Vector3
+                .Reflect(player.Velocity * player.RestitutionCoeficient,
+                         IntersectingFloor.Normal)
+                .Y;
       }
 
       if (player.Velocity.Y >= 0) {
@@ -339,7 +350,7 @@ public class TGCGame : Game {
         Vector3 acc = grav - (Vector3.Dot(IntersectingFloor.Normal, grav) *
                               IntersectingFloor.Normal);
         player.Velocity += acc * dt;
-      player.Velocity.Y -= Gravity * dt;
+        player.Velocity.Y -= Gravity * dt;
       }
 
     } else {
@@ -347,7 +358,7 @@ public class TGCGame : Game {
     }
 
     if (player.Position.Y <= RestartingY) {
-      // clear powerups...
+      player.SetMaterial(player.Material);
       player.Position = PlayerInitialPos;
       player.Velocity = Vector3.Zero;
     }

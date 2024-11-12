@@ -17,12 +17,11 @@ public class Checkpoint : IDisposable {
 
   public Vector3 Position {
     get => _position;
-    set { 
+    set {
       _position = value;
-      bb = new BoundingCylinder(value, Radius, Height / 2); 
+      bb = new BoundingCylinder(value, Radius, Height / 2);
     }
   }
-
 
   public Checkpoint(GraphicsDevice graphicsDevice, Vector3 position,
                     float radius, float height) {
@@ -32,11 +31,15 @@ public class Checkpoint : IDisposable {
     Position = position;
   }
 
-  public void Draw(Effect Effect) {
+  public void Draw(Effect Effect, Matrix View, Matrix Projection) {
     var color = Color.Blue;
     Matrix worldMatrix = Matrix.CreateTranslation(Position);
     Effect.Parameters["World"].SetValue(worldMatrix);
-    Effect.Parameters["DiffuseColor"].SetValue(color.ToVector3());
+    Effect.Parameters["InverseTransposeWorld"].SetValue(
+        Matrix.Transpose(Matrix.Invert(worldMatrix)));
+    Effect.Parameters["WorldViewProjection"].SetValue(worldMatrix * View *
+                                                      Projection);
+    Effect.Parameters["BaseColor"].SetValue(color.ToVector3());
     Model.Draw(Effect);
   }
 
