@@ -21,27 +21,17 @@ float shininess;
 float3 lightPosition;
 float3 eyePosition; // Camera position
 
-texture baseTexture;
-sampler2D textureSampler = sampler_state
-{
-    Texture = (baseTexture);
-    MagFilter = Linear;
-    MinFilter = Linear;
-    AddressU = Clamp;
-    AddressV = Clamp;
-};
+float3 BaseColor;
 
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
     float4 Normal : NORMAL;
-    float2 TextureCoordinates : TEXCOORD0;
 };
 
 struct VertexShaderOutput
 {
 	float4 Position : SV_POSITION;
-    float2 TextureCoordinates : TEXCOORD0;
     float4 WorldPosition : TEXCOORD1;
     float4 Normal : TEXCOORD2;    
 };
@@ -53,7 +43,6 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     output.Position = mul(input.Position, WorldViewProjection);
     output.WorldPosition = mul(input.Position, World);
     output.Normal = mul(input.Normal, InverseTransposeWorld);
-    output.TextureCoordinates = input.TextureCoordinates;
 	
 	return output;
 }
@@ -65,8 +54,7 @@ float4 MainPS(VertexShaderOutput input) : COLOR
     float3 viewDirection = normalize(eyePosition - input.WorldPosition.xyz);
     float3 halfVector = normalize(lightDirection + viewDirection);
 
-	// Get the texture texel
-    float4 texelColor = tex2D(textureSampler, input.TextureCoordinates);
+    float4 texelColor = float4(BaseColor, 1.0);
     
 	// Calculate the diffuse light
     float NdotL = saturate(dot(input.Normal.xyz, lightDirection));

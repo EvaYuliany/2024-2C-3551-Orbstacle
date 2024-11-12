@@ -20,15 +20,30 @@ float4x4 Projection;
 float3 DiffuseColor;
 
 float Time = 0;
+float3 LightDirection : LIGHTDIRECTION;
+
+texture NormalTexture : register(t1);
+sampler NormalSampler = sampler_state
+{
+    Texture = (NormalTexture);
+    MinFilter = POINT;
+    MagFilter = POINT;
+    MipFilter = POINT;
+};
 
 struct VertexShaderInput
 {
 	float4 Position : POSITION0;
+	 float3 Normal : NORMAL;
+	 float2 TexCoord : TEXCOORD0;  
 };
 
 struct VertexShaderOutput
 {
 	float4 Position : SV_POSITION;
+	float3 Normal : NORMAL;
+	    float2 TexCoord : TEXCOORD0;
+
 };
 
 VertexShaderOutput MainVS(in VertexShaderInput input)
@@ -40,13 +55,29 @@ VertexShaderOutput MainVS(in VertexShaderInput input)
     float4 viewPosition = mul(worldPosition, View);	
 
     output.Position = mul(viewPosition, Projection);
+    output.Normal = normalize(mul(input.Normal, (float3x3)World));
+    output.TexCoord = input.TexCoord;
 
     return output;
 }
 
 float4 MainPS(VertexShaderOutput input) : COLOR
 {
-    return float4(DiffuseColor, 1.0);
+	    float3 normalFromMap = tex2D(NormalSampler, input.TexCoord).xyz * 2.0f - 1.0f;  // Mapeamos a rango [-1,1]
+    normalFromMap = normalize(normalFromMap);
+
+	 // Intensidad de la luz usando el producto punto entre la dirección de la luz y la normal de la superficie
+    float lightIntensity = max(dot(normalFromMap,LightDirection), 0.0);
+
+    // Usamos un factor para aumentar la intensidad de la luz (por ejemplo, multiplicar por 2)
+    lightIntensity = lightIntensity * 2.0;
+
+    // Definir una luz ambiental mínima (para evitar que se vea negra)
+    float ambientLight = 1; // Puedes ajustar este valor
+    lightIntensity += ambientLight;
+
+    // Modificamos el color de la superficie con la luz calculada
+    return float4(DiffuseColor * lightIntensity, 1.0);
 }
 
 technique BasicColorDrawing

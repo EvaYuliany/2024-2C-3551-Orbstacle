@@ -47,7 +47,7 @@ public class Player : IDisposable {
 
   private SpherePrimitive Model;
   public BoundingSphere BoundingSphere;
-  private Matrix World;
+  private Matrix World = Matrix.Identity;
 
   public Vector3 Position;
   public Vector3 Velocity = Vector3.Zero;
@@ -122,13 +122,11 @@ public class Player : IDisposable {
   public void Jump() { Velocity.Y = JumpBoost; }
 
   public void Draw(Effect Effect, Matrix View, Matrix Projection) {
-    Effect.Parameters["View"].SetValue(View);
-    Effect.Parameters["Projection"].SetValue(Projection);
-    Effect.Parameters["World"].SetValue(World);
     Effect.Parameters["InverseTransposeWorld"].SetValue(
         Matrix.Transpose(Matrix.Invert(World)));
     Effect.Parameters["WorldViewProjection"].SetValue(World * View *
                                                       Projection);
+    Effect.Parameters["World"].SetValue(World);
     Effect.Parameters["BaseColor"].SetValue(Color.ToVector3());
     Model.Draw(Effect);
   }

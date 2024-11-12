@@ -33,10 +33,14 @@ abstract public class PowerUp : IDisposable {
     Position = position;
   }
 
-  public void Draw(Effect Effect) {
+  public void Draw(Effect Effect, Matrix View, Matrix Projection) {
     Matrix worldMatrix = Matrix.CreateTranslation(Position);
     Effect.Parameters["World"].SetValue(worldMatrix);
-    Effect.Parameters["DiffuseColor"].SetValue(Color.ToVector3());
+    Effect.Parameters["InverseTransposeWorld"].SetValue(
+        Matrix.Transpose(Matrix.Invert(worldMatrix)));
+    Effect.Parameters["WorldViewProjection"].SetValue(worldMatrix * View *
+                                                      Projection);
+    Effect.Parameters["BaseColor"].SetValue(Color.ToVector3());
     Model.Draw(Effect);
   }
 

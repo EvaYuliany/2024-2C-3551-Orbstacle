@@ -18,6 +18,7 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/BasicShader.fx
+/build:Effects/NormalShader.fx
 /build:Effects/PlayerShader.fx
 /build:Effects/BlinnPhongShader.fx
 
