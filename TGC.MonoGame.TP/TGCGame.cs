@@ -327,30 +327,29 @@ public class TGCGame : Game {
       check.Dispose();
     }
 
-    (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
-        FloorConstructor.Intersects(player.BoundingSphere);
+    (bool PlayerIntersectsFloor, Floor IntersectingFloor) = FloorConstructor.Intersects(player.BoundingSphere);
     if (PlayerIntersectsFloor) {
       if (keyboardState.IsKeyDown(Keys.Space)) {
         player.Jump();
       }
+    Vector3 correctedVelocity = Vector3.Zero;
 
       if (player.Velocity.Y < 0) {
-        player.Velocity.X =
-            Vector3.Reflect(player.Velocity, IntersectingFloor.Normal).X;
-        player.Velocity.Y =
-            Vector3
-                .Reflect(player.Velocity * player.RestitutionCoeficient,
-                         IntersectingFloor.Normal)
-                .Y;
+        correctedVelocity = Vector3.Reflect(player.Velocity, IntersectingFloor.Normal);
+        player.Velocity.X = correctedVelocity.X;
+        player.Velocity.Y = correctedVelocity.Y;
       }
 
       if (player.Velocity.Y >= 0) {
         player.Velocity += Vector3.UnitY * player.RestitutionCoeficient;
         Vector3 grav = Gravity * Vector3.UnitY;
-        Vector3 acc = grav - (Vector3.Dot(IntersectingFloor.Normal, grav) *
-                              IntersectingFloor.Normal);
+        Vector3 acc = grav - (Vector3.Dot(IntersectingFloor.Normal, grav) * IntersectingFloor.Normal);
         player.Velocity += acc * dt;
-        player.Velocity.Y -= Gravity * dt;
+
+        // Reducir la aceleración en las uniones de rampas
+        if (player.Position.Y < IntersectingFloor.Normal.Y + 0.5f) {
+            player.Velocity.Y -= Gravity * dt;
+        }
       }
 
     } else {

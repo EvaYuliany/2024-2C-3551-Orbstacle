@@ -105,13 +105,22 @@ public class FloorConstructor : IDisposable {
     }
   }
 
-  public (bool, Floor) Intersects(BoundingSphere m) {
+public (bool, Floor) Intersects(BoundingSphere m) {
     int intersecting_floor = Floors.FindIndex((b) => b.Intersects(m));
     if (intersecting_floor == -1)
-      return (false, null);
+        return (false, null);
 
-    return (true, Floors[intersecting_floor]);
-  }
+    Floor intersectingFloor = Floors[intersecting_floor];
+    
+    if (Slopes[intersecting_floor]) {
+        Vector3 normal = Vector3.Cross(intersectingFloor.Scale.X * Vector3.UnitX, intersectingFloor.Scale.Z * Vector3.UnitZ);
+        normal.Normalize(); 
+        intersectingFloor.Normal = normal; 
+    }
+
+    return (true, intersectingFloor);
+}
+
 
   public void Dispose() { Cube.Dispose(); }
 }
