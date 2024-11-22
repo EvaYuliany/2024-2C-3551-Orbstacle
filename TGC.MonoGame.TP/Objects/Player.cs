@@ -22,7 +22,7 @@ struct MaterialProperties {
 public class Player : IDisposable {
 
   MaterialProperties PlasticProperties =
-      new MaterialProperties { jump_boost = 10f,
+      new MaterialProperties { jump_boost = 50f,
                                acceleration = 40f,
                                friction = 4f,
                                max_speed = 40f,
@@ -30,7 +30,7 @@ public class Player : IDisposable {
                                color = Color.Red };
 
   MaterialProperties MetalProperties =
-      new MaterialProperties { jump_boost = 8f,
+      new MaterialProperties { jump_boost = 40f,
                                acceleration = 40f,
                                friction = 4f,
                                max_speed = 25f,
@@ -38,7 +38,7 @@ public class Player : IDisposable {
                                color = Color.Blue };
 
   MaterialProperties RubberProperties =
-      new MaterialProperties { jump_boost = 12f,
+      new MaterialProperties { jump_boost = 30f,
                                acceleration = 40f,
                                friction = 4f,
                                max_speed = 30f,

@@ -15,17 +15,15 @@ public class Floor : IDisposable {
   public Vector3 Translation;
   public Vector3 Scale;
   public Vector3 Rotation;
-  public Vector3 Color;
   public Vector3 Normal;
 
   private CubePrimitive Cube;
 
   public Floor(CubePrimitive cube, Vector3 translation, Vector3 scale,
-               Vector3 rotation, Vector3 color) {
+               Vector3 rotation) {
     Translation = translation;
     Scale = scale;
     Rotation = rotation;
-    Color = color;
     Cube = cube;
 
     Matrix rotation_matrix = Matrix.CreateRotationX(Rotation.X) *
@@ -35,7 +33,6 @@ public class Floor : IDisposable {
     Normal =
         Vector3.Normalize(Vector3.Transform(Vector3.UnitY, rotation_matrix) +
                           Vector3.UnitY * scale.Y * 0.5f);
-    ;
 
     Vector3 bb = scale * 0.5f;
     BoundingBox = OrientedBoundingBox.FromAABB(
@@ -48,7 +45,6 @@ public class Floor : IDisposable {
                          Matrix.CreateRotationY(Rotation.Y) *
                          Matrix.CreateRotationZ(Rotation.Z) *
                          Matrix.CreateTranslation(Translation);
-    Effect.Parameters["BaseColor"].SetValue(Color);
     Effect.Parameters["InverseTransposeWorld"].SetValue(
         Matrix.Transpose(Matrix.Invert(worldMatrix)));
     Effect.Parameters["WorldViewProjection"].SetValue(worldMatrix * View *

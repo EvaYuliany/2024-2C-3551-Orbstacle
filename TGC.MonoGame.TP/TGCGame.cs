@@ -33,19 +33,21 @@ public class TGCGame : Game {
   private GraphicsDeviceManager Graphics;
 
   private Effect NormalEffect;
+  private Effect BlinnEffect;
+
   private Matrix View;
   private Matrix Projection;
 
-  private Vector3 PlayerInitialPos = Vector3.Zero;
-  private Effect BlinnEffect;
+  private Menu menu;
+
   private Player player;
-  private Song Song { get; set; }
+  private float Points = 0;
+  private Vector3 PlayerInitialPos = Vector3.Zero;
+
   private List<Vector3> cubePositions;
   private List<Vector3> spherePositions;
   private List<Color> sphereColors;
   private List<Color> cubeColors;
-
-  private Menu menu;
 
   private float CameraAngle = MathF.PI;
   private float CameraRotationSpeed = 5f;
@@ -67,25 +69,23 @@ public class TGCGame : Game {
   private Random random;
 
   private SpherePrimitive Sphere;
-
   private CubePrimitive Cube;
-
   private FloorConstructor FloorConstructor;
 
+  private Pendulum pendulum;
   private Checkpoint check;
   private SpeedPowerUp powerup;
   private JumpBoostPowerUp jpowerup;
-
   private List<Coin> coins;
-  private float Points = 0;
 
-  private Pendulum pendulum;
   private SkyBox SkyBox { get; set; }
   private Model SkyBoxModel { get; set; }
   private Effect SkyBoxEffect { get; set; }
   private TextureCube SkyBoxTexture { get; set; }
-  private Texture2D NormalMap { get; set; }
+
+  private Song Song { get; set; }
   private Texture2D FloorNormalMap { get; set; }
+  private Texture2D FloorTexture { get; set; }
 
   protected override void Initialize() {
     menu = new Menu(this);
@@ -111,8 +111,6 @@ public class TGCGame : Game {
                                        (float)(random.NextDouble() * 600)  // Z
       );
       cubePositions.Add(randomPosition);
-
-      // Generar color aleatorio
       var randomColor = new Color((float)random.NextDouble(), // R
                                   (float)random.NextDouble(), // G
                                   (float)random.NextDouble()  // B
@@ -121,14 +119,11 @@ public class TGCGame : Game {
     }
     spherePositions = new List<Vector3>();
     for (int i = 0; i < numberOfSpheres; i++) {
-      // Generar posiciones aleatorias dentro de un rango
       var randomPosition = new Vector3((float)(random.NextDouble() * 600), // X
                                        (float)(random.NextDouble() * 50),  // Y
                                        (float)(random.NextDouble() * 600)  // Z
       );
-
       spherePositions.Add(randomPosition);
-      // Generar color aleatorio
       var randomColor = new Color((float)random.NextDouble(), // R
                                   (float)random.NextDouble(), // G
                                   (float)random.NextDouble()  // B
@@ -183,38 +178,68 @@ public class TGCGame : Game {
     base.Initialize();
   }
 
- protected override void LoadContent() {
+  protected override void LoadContent() {
     SkyBoxEffect = Content.Load<Effect>(ContentFolderEffects + "SkyBox");
     SkyBoxModel = Content.Load<Model>(ContentFolder3D + "skybox/cube");
-    SkyBoxTexture = Content.Load<TextureCube>(ContentFolderTextures + "skybox");
+    SkyBoxTexture =
+        Content.Load<TextureCube>(ContentFolderTextures + ("skybo" + "x"));
     SkyBox = new SkyBox(SkyBoxModel, SkyBoxTexture, SkyBoxEffect);
-    
+
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
 
-    BlinnEffect = Content.Load<Effect>(ContentFolderEffects + "BlinnPhongShader");
-    BlinnEffect.Parameters["lightPosition"].SetValue(new Vector3(0, 100, 0));
-    BlinnEffect.Parameters["ambientColor"].SetValue(new Vector3(1, 1, 1));
-    BlinnEffect.Parameters["diffuseColor"].SetValue(new Vector3(0.9f, 0.5f, 0.1f));
-    BlinnEffect.Parameters["specularColor"].SetValue(new Vector3(1, 1, 1));
-    BlinnEffect.Parameters["KAmbient"].SetValue(0.2f);
-    BlinnEffect.Parameters["KDiffuse"].SetValue(1.0f);
-    BlinnEffect.Parameters["KSpecular"].SetValue(0.8f);
-    BlinnEffect.Parameters["shininess"].SetValue(16.0f);
+    BlinnEffect =
+        Content.Load<Effect>(ContentFolderEffects + "BlinnPhongShader");
 
-    NormalEffect = Content.Load<Effect>(ContentFolderEffects + "NormalShader");
-    NormalMap = Content.Load<Texture2D>(ContentFolderTextures + "tiling-normal");
-    FloorNormalMap = Content.Load<Texture2D>(ContentFolderTextures + "tiling-normal");
+    NormalEffect =
+        Content.Load<Effect>(ContentFolderEffects + ("NormalShade" + "r"));
+
+    FloorNormalMap =
+        Content.Load<Texture2D>(ContentFolderTextures + "tiling-normal");
+    FloorTexture =
+        Content.Load<Texture2D>(ContentFolderTextures + "tiling-base");
+
+    Vector3 ambientColor = new Vector3(0.868f, 0.696f, 0.336f);
+    Vector3 diffuseColor = new Vector3(1f, 0.182f, 0.157f);
+    Vector3 specularColor = Vector3.One;
+    Vector3 lightPosition = Vector3.UnitY * 100;
+
+    float kAmbient = 1f;
+    float kDiffuse = 0.6f;
+    float kSpecular = 0.8f;
+    float shininess = 16f;
+
+    Vector2 tiling = Vector2.One * 0.5f;
+
+    BlinnEffect.Parameters["lightPosition"].SetValue(lightPosition);
+    BlinnEffect.Parameters["ambientColor"].SetValue(ambientColor);
+    BlinnEffect.Parameters["diffuseColor"].SetValue(diffuseColor);
+    BlinnEffect.Parameters["specularColor"].SetValue(specularColor);
+    BlinnEffect.Parameters["KAmbient"].SetValue(kAmbient);
+    BlinnEffect.Parameters["KDiffuse"].SetValue(kDiffuse);
+    BlinnEffect.Parameters["KSpecular"].SetValue(kSpecular);
+    BlinnEffect.Parameters["shininess"].SetValue(shininess);
+
+    NormalEffect.Parameters["lightPosition"].SetValue(lightPosition);
+    NormalEffect.Parameters["ambientColor"].SetValue(ambientColor);
+    NormalEffect.Parameters["diffuseColor"].SetValue(diffuseColor);
+    NormalEffect.Parameters["specularColor"].SetValue(specularColor);
+    NormalEffect.Parameters["KAmbient"].SetValue(kAmbient);
+    NormalEffect.Parameters["KDiffuse"].SetValue(kDiffuse);
+    NormalEffect.Parameters["KSpecular"].SetValue(kSpecular);
+    NormalEffect.Parameters["shininess"].SetValue(shininess);
+    NormalEffect.Parameters["Tiling"].SetValue(tiling);
+    NormalEffect.Parameters["NormalTexture"].SetValue(FloorNormalMap);
+    NormalEffect.Parameters["ModelTexture"].SetValue(FloorTexture);
 
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
     MediaPlayer.Volume = 0.2f;
     MediaPlayer.Play(Song);
 
-   
     menu.LoadContent();
     base.LoadContent();
-}
+  }
   protected override void Update(GameTime gameTime) {
     if (menu.IsActive)
       menu.Update(gameTime, player);
@@ -226,7 +251,7 @@ public class TGCGame : Game {
 
     if (!menu.IsActive)
       player.Update(dt, keyboardState, CameraAngle);
-      pendulum.Update(dt);
+    pendulum.Update(dt);
     for (int i = 0; i < coins.Count; i++) {
       coins[i].Update(dt);
     }
@@ -234,7 +259,10 @@ public class TGCGame : Game {
       CheckCollisions(dt, keyboardState, gameTime);
       CameraMovement(dt, keyboardState);
     }
+
     BlinnEffect.Parameters["eyePosition"].SetValue(
+        GetCameraPosition(CameraAngle));
+    NormalEffect.Parameters["eyePosition"].SetValue(
         GetCameraPosition(CameraAngle));
 
     base.Update(gameTime);
@@ -243,53 +271,29 @@ public class TGCGame : Game {
                                Vector3.Up);
   }
 
- protected override void Draw(GameTime gameTime) {
+  protected override void Draw(GameTime gameTime) {
     GraphicsDevice.Clear(Color.Black);
 
-    NormalEffect.Parameters["WorldViewProjection"].SetValue(View * Projection);
-    NormalEffect.Parameters["World"].SetValue(Matrix.Identity); // Ajusta esto a la matriz del objeto
-    NormalEffect.Parameters["InverseTransposeWorld"].SetValue(Matrix.Transpose(Matrix.Invert(Matrix.Identity))); // Ajustar según la orientación
-    NormalEffect.Parameters["ambientColor"].SetValue(new Vector3(1, 1, 1));
-    NormalEffect.Parameters["diffuseColor"].SetValue(new Vector3(0.9f, 0.5f, 0.1f));
-    NormalEffect.Parameters["specularColor"].SetValue(new Vector3(1, 1, 1));
-    NormalEffect.Parameters["KAmbient"].SetValue(0.2f);
-    NormalEffect.Parameters["KDiffuse"].SetValue(1.0f);
-    NormalEffect.Parameters["KSpecular"].SetValue(0.8f);
-    NormalEffect.Parameters["shininess"].SetValue(16.0f);
-    NormalEffect.Parameters["lightPosition"].SetValue(new Vector3(0, 100, 0));
-    NormalEffect.Parameters["eyePosition"].SetValue(GetCameraPosition(CameraAngle)); // Ajustar según la cámara
-    NormalEffect.Parameters["Tiling"].SetValue(new Vector2(1, 1)); // Ajustar si es necesario
-
-    // Asignar las texturas
-    NormalEffect.Parameters["ModelTexture"].SetValue(NormalMap);
-    NormalEffect.Parameters["NormalTexture"].SetValue(FloorNormalMap); // Para el mapa de normales del piso
-
-
     if (menu.IsActive) {
-        menu.Draw(gameTime, player);
+      menu.Draw(gameTime, player);
     } else {
-        player.Draw(BlinnEffect, View, Projection);
+      player.Draw(BlinnEffect, View, Projection);
     }
-    
+
     pendulum.Draw(BlinnEffect, View, Projection);
     FloorConstructor.Draw(NormalEffect, View, Projection);
     powerup.Draw(BlinnEffect, View, Projection);
     jpowerup.Draw(BlinnEffect, View, Projection);
     check.Draw(BlinnEffect, View, Projection);
 
-    // Dibujar Coins con BlinnEffect
     foreach (var coin in coins) {
-        coin.Draw(BlinnEffect, View, Projection);
-    }
+      coin.Draw(BlinnEffect, View, Projection);
 
-
-
-
-    if (!menu.IsActive) {
+      if (!menu.IsActive) {
         SkyBox.Draw(View, Projection, GetCameraPosition(CameraAngle));
+      }
     }
-}
-
+  }
 
   public void CameraMovement(float dt, KeyboardState keyboardState) {
     if (keyboardState.IsKeyDown(Keys.Up))
@@ -327,29 +331,25 @@ public class TGCGame : Game {
       check.Dispose();
     }
 
-    (bool PlayerIntersectsFloor, Floor IntersectingFloor) = FloorConstructor.Intersects(player.BoundingSphere);
+    (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
+        FloorConstructor.Intersects(player.BoundingSphere);
     if (PlayerIntersectsFloor) {
       if (keyboardState.IsKeyDown(Keys.Space)) {
         player.Jump();
       }
-    Vector3 correctedVelocity = Vector3.Zero;
 
       if (player.Velocity.Y < 0) {
-        correctedVelocity = Vector3.Reflect(player.Velocity, IntersectingFloor.Normal);
-        player.Velocity.X = correctedVelocity.X;
-        player.Velocity.Y = correctedVelocity.Y;
+        player.Velocity =
+            Vector3.Reflect(player.Velocity * player.RestitutionCoeficient,
+                            IntersectingFloor.Normal);
       }
 
       if (player.Velocity.Y >= 0) {
         player.Velocity += Vector3.UnitY * player.RestitutionCoeficient;
-        Vector3 grav = Gravity * Vector3.UnitY;
-        Vector3 acc = grav - (Vector3.Dot(IntersectingFloor.Normal, grav) * IntersectingFloor.Normal);
+        Vector3 grav = -20 * Gravity * Vector3.UnitY;
+        Vector3 acc = grav - (Vector3.Dot(IntersectingFloor.Normal, grav) *
+                              IntersectingFloor.Normal);
         player.Velocity += acc * dt;
-
-        // Reducir la aceleración en las uniones de rampas
-        if (player.Position.Y < IntersectingFloor.Normal.Y + 0.5f) {
-            player.Velocity.Y -= Gravity * dt;
-        }
       }
 
     } else {

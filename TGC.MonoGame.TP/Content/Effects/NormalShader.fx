@@ -1,30 +1,25 @@
 ﻿#if OPENGL
-    #define SV_POSITION POSITION
-    #define VS_SHADERMODEL vs_3_0
-    #define PS_SHADERMODEL ps_3_0
+	#define SV_POSITION POSITION
+	#define VS_SHADERMODEL vs_3_0
+	#define PS_SHADERMODEL ps_3_0
 #else
-    #define VS_SHADERMODEL vs_4_0_level_9_1
-    #define PS_SHADERMODEL ps_4_0_level_9_1
+	#define VS_SHADERMODEL vs_4_0_level_9_1
+	#define PS_SHADERMODEL ps_4_0_level_9_1
 #endif
 
-// Matrices de transformación
 float4x4 WorldViewProjection;
 float4x4 World;
 float4x4 InverseTransposeWorld;
 
-// Propiedades de iluminación
-float3 ambientColor;
-float3 diffuseColor;
-float3 specularColor;
-float KAmbient;
-float KDiffuse;
+float3 ambientColor; // Light's Ambient Color
+float3 diffuseColor; // Light's Diffuse Color
+float3 specularColor; // Light's Specular Color
+float KAmbient; 
+float KDiffuse; 
 float KSpecular;
-float shininess;
+float shininess; 
 float3 lightPosition;
-float3 eyePosition;
-
-// Propiedades de texturas y color base
-float3 BaseColor;
+float3 eyePosition; // Camera position
 float2 Tiling;
 
 texture ModelTexture;
@@ -38,6 +33,7 @@ sampler2D textureSampler = sampler_state
     MIPFILTER = LINEAR;
 };
 
+//Textura para Normals
 texture NormalTexture;
 sampler2D normalSampler = sampler_state
 {
@@ -49,7 +45,6 @@ sampler2D normalSampler = sampler_state
     MIPFILTER = LINEAR;
 };
 
-// Obtener normales desde el mapa de normales
 float3 getNormalFromMap(float2 textureCoordinates, float3 worldPosition, float3 worldNormal)
 {
     float3 tangentNormal = tex2D(normalSampler, textureCoordinates).xyz * 2.0 - 1.0;
@@ -67,71 +62,63 @@ float3 getNormalFromMap(float2 textureCoordinates, float3 worldPosition, float3 
     return normalize(mul(tangentNormal, TBN));
 }
 
-// Estructuras de entrada y salida del Vertex Shader
 struct VertexShaderInput
 {
-    float4 Position : POSITION0;
+  	float4 Position : POSITION0;
     float4 Normal : NORMAL;
     float2 TextureCoordinates : TEXCOORD0;
 };
 
 struct VertexShaderOutput
 {
-    float4 Position : SV_POSITION;
+  	float4 Position : SV_POSITION;
     float2 TextureCoordinates : TEXCOORD0;
     float4 WorldPosition : TEXCOORD1;
-    float4 Normal : TEXCOORD2;
+    float4 Normal : TEXCOORD2;    
 };
 
-// Vertex Shader
-VertexShaderOutput CombinedVS(in VertexShaderInput input)
+VertexShaderOutput NormalMapVS(in VertexShaderInput input)
 {
-    VertexShaderOutput output = (VertexShaderOutput)0;
+    VertexShaderOutput output = (VertexShaderOutput) 0;
 
     output.Position = mul(input.Position, WorldViewProjection);
     output.WorldPosition = mul(input.Position, World);
     output.Normal = mul(input.Normal, InverseTransposeWorld);
     output.TextureCoordinates = input.TextureCoordinates * Tiling;
-
+	
     return output;
 }
 
-// Pixel Shader
-float4 CombinedPS(VertexShaderOutput input) : COLOR
+float4 NormalMapPS(VertexShaderOutput input) : COLOR
 {
-    // Direcciones de luz y cámara
+    // Base vectors
     float3 lightDirection = normalize(lightPosition - input.WorldPosition.xyz);
     float3 viewDirection = normalize(eyePosition - input.WorldPosition.xyz);
     float3 halfVector = normalize(lightDirection + viewDirection);
+    float3 normal =  getNormalFromMap(input.TextureCoordinates, input.WorldPosition.xyz, normalize(input.Normal.xyz));
 
-    // Obtener normal desde el mapa si está disponible
-    float3 normal = getNormalFromMap(input.TextureCoordinates, input.WorldPosition.xyz, normalize(input.Normal.xyz));
-
-    // Obtener color de la textura, si existe; de lo contrario, usar BaseColor
+	// Get the texture texel
     float4 texelColor = tex2D(textureSampler, input.TextureCoordinates);
-    if (texelColor.a == 0) // Si no hay textura, usar el color base
-    {
-        texelColor = float4(BaseColor, 1.0);
-    }
-
-    // Cálculo de la luz difusa
+    
+	// Calculate the diffuse light
     float NdotL = saturate(dot(normal, lightDirection));
     float3 diffuseLight = KDiffuse * diffuseColor * NdotL;
 
-    // Cálculo de la luz especular
+	// Calculate the specular light
     float NdotH = dot(normal, halfVector);
-    float3 specularLight = KSpecular * specularColor * pow(saturate(NdotH), shininess);
-
-    // Cálculo final del color
-    float4 finalColor = float4(saturate(ambientColor * KAmbient + diffuseLight) * texelColor.rgb + specularLight, texelColor.a);
+    float3 specularLight = KSpecular * specularColor * pow(NdotH, shininess);
+    
+    // Final calculation
+     float4 finalColor = float4(saturate(ambientColor * KAmbient + diffuseLight) * texelColor.rgb + specularLight, texelColor.a);
     return finalColor;
+
 }
 
-technique CombinedTechnique
+technique NormalMapping
 {
     pass Pass0
     {
-        VertexShader = compile VS_SHADERMODEL CombinedVS();
-        PixelShader = compile PS_SHADERMODEL CombinedPS();
+        VertexShader = compile VS_SHADERMODEL NormalMapVS();
+        PixelShader = compile PS_SHADERMODEL NormalMapPS();
     }
 };
