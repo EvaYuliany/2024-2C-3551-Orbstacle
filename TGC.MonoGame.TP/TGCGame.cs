@@ -32,12 +32,22 @@ public class TGCGame : Game {
     Content.RootDirectory = "Content";
     IsMouseVisible = true;
   }
+  private const int EnvironmentMapSize = 2048;
+
+  Vector3 EnvironmentUpDirection = Vector3.UnitY;
+  Vector3 EnvironmentFrontDirection = Vector3.UnitX;
 
   private Effect NormalEffect;
   private Effect BlinnEffect;
+  private Effect EnvironmentEffect;
 
   private Matrix View;
   private Matrix Projection;
+
+  private Matrix EnvironmentView;
+  private Matrix EnvironmentProjection;
+
+  private RenderTargetCube EnvironmentRenderTarget;
 
   private Menu menu;
 
@@ -99,8 +109,18 @@ public class TGCGame : Game {
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
                                Vector3.Up);
+    EnvironmentView = Matrix.CreateLookAt(
+        player.Position, player.Position + EnvironmentFrontDirection,
+        EnvironmentUpDirection);
+
     Projection = Matrix.CreatePerspectiveFieldOfView(
         MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 1500);
+    EnvironmentProjection =
+        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 1f, 1500f);
+
+    EnvironmentRenderTarget = new RenderTargetCube(
+        GraphicsDevice, EnvironmentMapSize, false, SurfaceFormat.Color,
+        DepthFormat.Depth24, 0, RenderTargetUsage.DiscardContents);
 
     random = new Random(0);
     cubePositions = new List<Vector3>();
@@ -200,6 +220,9 @@ public class TGCGame : Game {
     NormalEffect =
         Content.Load<Effect>(ContentFolderEffects + ("NormalShade" + "r"));
 
+    EnvironmentEffect =
+        Content.Load<Effect>(ContentFolderEffects + "EnvironmentShader");
+
     Vector3 ambientColor = new Vector3(0.868f, 0.696f, 0.336f);
     Vector3 diffuseColor = new Vector3(1f, 0.182f, 0.157f);
     Vector3 specularColor = Vector3.One;
@@ -265,21 +288,19 @@ public class TGCGame : Game {
         GetCameraPosition(CameraAngle));
     NormalEffect.Parameters["eyePosition"].SetValue(
         GetCameraPosition(CameraAngle));
+    EnvironmentEffect.Parameters["eyePosition"].SetValue(
+        GetCameraPosition(CameraAngle));
 
     base.Update(gameTime);
     View = Matrix.CreateLookAt(GetCameraPosition(CameraAngle) + player.Position,
                                player.Position + Vector3.UnitY * CameraUpAngle,
                                Vector3.Up);
+    EnvironmentView = Matrix.CreateLookAt(
+        player.Position, player.Position + EnvironmentFrontDirection,
+        EnvironmentUpDirection);
   }
 
-  protected override void Draw(GameTime gameTime) {
-    GraphicsDevice.Clear(Color.Black);
-
-    if (menu.IsActive) {
-      menu.Draw(gameTime, player);
-    } else {
-      player.Draw(BlinnEffect, View, Projection);
-    }
+  protected void DrawScene(GameTime gameTime, Matrix View, Matrix Projection) {
 
     pendulum.Draw(BlinnEffect, View, Projection);
     FloorConstructor.Draw(NormalEffect, View, Projection);
@@ -293,6 +314,84 @@ public class TGCGame : Game {
       if (!menu.IsActive) {
         SkyBox.Draw(View, Projection, GetCameraPosition(CameraAngle));
       }
+    }
+  }
+
+  protected override void Draw(GameTime gameTime) {
+    GraphicsDevice.Clear(Color.Black);
+
+    if (menu.IsActive) {
+      menu.Draw(gameTime, player);
+    } else {
+      switch (player.Material) {
+      case Material.Metal: {
+        for (var face = CubeMapFace.PositiveX; face <= CubeMapFace.NegativeZ;
+             face++) {
+          GraphicsDevice.SetRenderTarget(EnvironmentRenderTarget, face);
+          GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer,
+                               Color.Black, 1f, 0);
+
+          SetCubemapCameraForOrientation(face);
+          EnvironmentView = Matrix.CreateLookAt(
+              player.Position, player.Position + EnvironmentFrontDirection,
+              EnvironmentUpDirection);
+
+          DrawScene(gameTime, EnvironmentView, EnvironmentProjection);
+        }
+        GraphicsDevice.SetRenderTarget(null);
+        EnvironmentEffect.Parameters["environmentMap"].SetValue(
+            EnvironmentRenderTarget);
+        player.Draw(EnvironmentEffect, View, Projection);
+        break;
+      }
+      case Material.Plastic: {
+        BlinnEffect.Parameters["BaseColor"].SetValue(Color.Red.ToVector3());
+        player.Draw(BlinnEffect, View, Projection);
+        break;
+      }
+      case Material.Rubber: {
+        BlinnEffect.Parameters["BaseColor"].SetValue(Color.Green.ToVector3());
+        player.Draw(BlinnEffect, View, Projection);
+        break;
+      }
+      }
+    }
+
+    DrawScene(gameTime, View, Projection);
+  }
+
+  private void SetCubemapCameraForOrientation(CubeMapFace face) {
+    switch (face) {
+    default:
+    case CubeMapFace.PositiveX:
+      EnvironmentFrontDirection = -Vector3.UnitX;
+      EnvironmentUpDirection = Vector3.Down;
+      break;
+
+    case CubeMapFace.NegativeX:
+      EnvironmentFrontDirection = Vector3.UnitX;
+      EnvironmentUpDirection = Vector3.Down;
+      break;
+
+    case CubeMapFace.PositiveY:
+      EnvironmentFrontDirection = Vector3.Down;
+      EnvironmentUpDirection = Vector3.UnitZ;
+      break;
+
+    case CubeMapFace.NegativeY:
+      EnvironmentFrontDirection = Vector3.Up;
+      EnvironmentUpDirection = -Vector3.UnitZ;
+      break;
+
+    case CubeMapFace.PositiveZ:
+      EnvironmentFrontDirection = -Vector3.UnitZ;
+      EnvironmentUpDirection = Vector3.Down;
+      break;
+
+    case CubeMapFace.NegativeZ:
+      EnvironmentFrontDirection = Vector3.UnitZ;
+      EnvironmentUpDirection = Vector3.Down;
+      break;
     }
   }
 

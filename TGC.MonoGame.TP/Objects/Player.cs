@@ -16,7 +16,6 @@ struct MaterialProperties {
   public float friction;
   public float max_speed;
   public float restitution_coeficient;
-  public Color color;
 }
 
 public class Player : IDisposable {
@@ -27,7 +26,7 @@ public class Player : IDisposable {
                                friction = 4f,
                                max_speed = 40f,
                                restitution_coeficient = 0.8f,
-                               color = Color.Red };
+                               };
 
   MaterialProperties MetalProperties =
       new MaterialProperties { jump_boost = 40f,
@@ -35,7 +34,7 @@ public class Player : IDisposable {
                                friction = 4f,
                                max_speed = 25f,
                                restitution_coeficient = 0.8f,
-                               color = Color.Blue };
+                               };
 
   MaterialProperties RubberProperties =
       new MaterialProperties { jump_boost = 30f,
@@ -43,7 +42,7 @@ public class Player : IDisposable {
                                friction = 4f,
                                max_speed = 30f,
                                restitution_coeficient = 0.8f,
-                               color = Color.Green };
+                               };
 
   private SpherePrimitive Model;
   public BoundingSphere BoundingSphere;
@@ -55,7 +54,6 @@ public class Player : IDisposable {
   public Material Material;
 
   private float Radius;
-  private Color Color;
 
   public float JumpBoost;
   public float Friction;
@@ -127,12 +125,10 @@ public class Player : IDisposable {
     Effect.Parameters["WorldViewProjection"].SetValue(World * View *
                                                       Projection);
     Effect.Parameters["World"].SetValue(World);
-    Effect.Parameters["BaseColor"].SetValue(Color.ToVector3());
     Model.Draw(Effect);
   }
 
   private void SetMaterialProps(MaterialProperties p) {
-    Color = p.color;
     JumpBoost = p.jump_boost;
     Friction = p.friction;
     MaxSpeed = p.max_speed;

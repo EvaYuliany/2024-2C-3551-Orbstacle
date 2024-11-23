@@ -29,6 +29,10 @@
 /importer:EffectImporter
 /build:Effects/NormalShader.fx
 
+#begin Effects/EnvironmentShader.fx
+/importer:EffectImporter
+/build:Effects/EnvironmentShader.fx
+
 #begin Effects/PlayerShader.fx
 /importer:EffectImporter
 /processor:EffectProcessor
