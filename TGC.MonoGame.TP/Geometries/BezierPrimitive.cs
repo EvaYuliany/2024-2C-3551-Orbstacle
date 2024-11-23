@@ -51,7 +51,7 @@ namespace TGC.MonoGame.TP.Geometries
                 if (isMirrored) Array.Reverse(indices);
 
                 // Create the indices.
-                foreach (var index in indices) AddIndex(CurrentVertex(false) + index);
+                foreach (var index in indices) AddIndex(CurrentVertex + index);
             }
         }
 

@@ -20,7 +20,7 @@ namespace TGC.MonoGame.TP.Geometries {
 /// <summary>
 ///     Geometric primitive class for drawing cubes.
 /// </summary>
-public class CubePrimitive : GeometricPrimitive {
+public class CubePrimitive : GeometricPrimitiveTexture {
   public CubePrimitive(GraphicsDevice graphicsDevice)
       : this(graphicsDevice, 1) {}
 
@@ -51,24 +51,24 @@ public class CubePrimitive : GeometricPrimitive {
       var side2 = Vector3.Cross(normal, side1);
 
       // Six indices (two triangles) per face.
-      AddIndex(CurrentVertex(true) + 0);
-      AddIndex(CurrentVertex(true) + 1);
-      AddIndex(CurrentVertex(true) + 2);
+      AddIndex(CurrentVertex + 0);
+      AddIndex(CurrentVertex + 1);
+      AddIndex(CurrentVertex + 2);
 
-      AddIndex(CurrentVertex(true) + 0);
-      AddIndex(CurrentVertex(true) + 2);
-      AddIndex(CurrentVertex(true) + 3);
+      AddIndex(CurrentVertex + 0);
+      AddIndex(CurrentVertex + 2);
+      AddIndex(CurrentVertex + 3);
 
       // Four vertices per face.
       AddVertex((normal - side1 - side2) * size / 2, normal, Vector2.Zero);
       AddVertex((normal - side1 + side2) * size / 2, normal, Vector2.UnitX);
-      AddVertex((normal + side1 + side2) * size / 2, normal, Vector2.UnitY);
-      AddVertex((normal + side1 - side2) * size / 2, normal, Vector2.One);
+      AddVertex((normal + side1 + side2) * size / 2, normal, Vector2.One);
+      AddVertex((normal + side1 - side2) * size / 2, normal, Vector2.UnitY);
 
       i++;
     }
 
-    InitializePrimitive(graphicsDevice, true);
+    InitializePrimitive(graphicsDevice);
   }
 }
 }

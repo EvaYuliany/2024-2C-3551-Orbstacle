@@ -44,30 +44,30 @@ public class PyramidPrimitive : GeometricPrimitive {
                           Vector3[] base_vertex, Color vertexColor1,
                           Color vertexColor2, Color vertexColor3) {
     // Base triangles
-    AddIndex(CurrentVertex(false) + 0);
-    AddIndex(CurrentVertex(false) + 2);
-    AddIndex(CurrentVertex(false) + 1);
+    AddIndex(CurrentVertex + 0);
+    AddIndex(CurrentVertex + 2);
+    AddIndex(CurrentVertex + 1);
 
-    AddIndex(CurrentVertex(false) + 0);
-    AddIndex(CurrentVertex(false) + 3);
-    AddIndex(CurrentVertex(false) + 2);
+    AddIndex(CurrentVertex + 0);
+    AddIndex(CurrentVertex + 3);
+    AddIndex(CurrentVertex + 2);
 
     // Walls triangles
-    AddIndex(CurrentVertex(false) + 0);
-    AddIndex(CurrentVertex(false) + 1);
-    AddIndex(CurrentVertex(false) + 4);
+    AddIndex(CurrentVertex + 0);
+    AddIndex(CurrentVertex + 1);
+    AddIndex(CurrentVertex + 4);
 
-    AddIndex(CurrentVertex(false) + 3);
-    AddIndex(CurrentVertex(false) + 0);
-    AddIndex(CurrentVertex(false) + 4);
+    AddIndex(CurrentVertex + 3);
+    AddIndex(CurrentVertex + 0);
+    AddIndex(CurrentVertex + 4);
 
-    AddIndex(CurrentVertex(false) + 2);
-    AddIndex(CurrentVertex(false) + 3);
-    AddIndex(CurrentVertex(false) + 4);
+    AddIndex(CurrentVertex + 2);
+    AddIndex(CurrentVertex + 3);
+    AddIndex(CurrentVertex + 4);
 
-    AddIndex(CurrentVertex(false) + 1);
-    AddIndex(CurrentVertex(false) + 2);
-    AddIndex(CurrentVertex(false) + 4);
+    AddIndex(CurrentVertex + 1);
+    AddIndex(CurrentVertex + 2);
+    AddIndex(CurrentVertex + 4);
 
     Vector3 normal_0 = Vector3.Cross(base_vertex[2] - base_vertex[0],
                                      base_vertex[1] - base_vertex[2]);

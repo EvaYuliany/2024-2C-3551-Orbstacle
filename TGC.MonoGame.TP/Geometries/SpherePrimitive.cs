@@ -105,9 +105,9 @@ public class SpherePrimitive : GeometricPrimitive {
 
     // Create a fan connecting the top vertex to the top latitude ring.
     for (var i = 0; i < horizontalSegments; i++) {
-      AddIndex(CurrentVertex(false) - 1);
-      AddIndex(CurrentVertex(false) - 2 - (i + 1) % horizontalSegments);
-      AddIndex(CurrentVertex(false)- 2 - i);
+      AddIndex(CurrentVertex - 1);
+      AddIndex(CurrentVertex - 2 - (i + 1) % horizontalSegments);
+      AddIndex(CurrentVertex- 2 - i);
     }
 
     InitializePrimitive(graphicsDevice);

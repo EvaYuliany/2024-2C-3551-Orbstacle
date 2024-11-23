@@ -48,46 +48,46 @@ namespace TGC.MonoGame.TP.Geometries
             AddVertex(frontVertex1, color1, frontNormal);
             AddVertex(frontVertex2, color2, frontNormal);
             AddVertex(frontVertex3, color3, frontNormal);
-            AddIndex(CurrentVertex(false) + 0);
-            AddIndex(CurrentVertex(false) + 1);
-            AddIndex(CurrentVertex(false) + 2);
+            AddIndex(CurrentVertex + 0);
+            AddIndex(CurrentVertex + 1);
+            AddIndex(CurrentVertex + 2);
 
             // Back face
             AddVertex(backVertex1, color1, backNormal);
             AddVertex(backVertex2, color2, backNormal);
             AddVertex(backVertex3, color3, backNormal);
-            AddIndex(CurrentVertex(false) + 0);
-            AddIndex(CurrentVertex(false) + 1);
-            AddIndex(CurrentVertex(false) + 2);
+            AddIndex(CurrentVertex + 0);
+            AddIndex(CurrentVertex + 1);
+            AddIndex(CurrentVertex + 2);
 
             // Sides (connecting front to back)
             AddVertex(frontVertex1, color1, topNormal);
             AddVertex(frontVertex2, color2, topNormal);
             AddVertex(backVertex2, color3, topNormal);
-            AddIndex(CurrentVertex(false) + 0);
-            AddIndex(CurrentVertex(false) + 1);
-            AddIndex(CurrentVertex(false) + 2);
+            AddIndex(CurrentVertex + 0);
+            AddIndex(CurrentVertex + 1);
+            AddIndex(CurrentVertex + 2);
 
             AddVertex(frontVertex1, color1, topNormal);
             AddVertex(backVertex2, color2, topNormal);
             AddVertex(backVertex1, color3, topNormal);
-            AddIndex(CurrentVertex(false) + 0);
-            AddIndex(CurrentVertex(false) + 1);
-            AddIndex(CurrentVertex(false) + 2);
+            AddIndex(CurrentVertex + 0);
+            AddIndex(CurrentVertex + 1);
+            AddIndex(CurrentVertex + 2);
 
             AddVertex(frontVertex3, color1, topNormal);
             AddVertex(frontVertex2, color2, topNormal);
             AddVertex(backVertex2, color3, topNormal);
-            AddIndex(CurrentVertex(false) + 0);
-            AddIndex(CurrentVertex(false) + 1);
-            AddIndex(CurrentVertex(false) + 2);
+            AddIndex(CurrentVertex + 0);
+            AddIndex(CurrentVertex + 1);
+            AddIndex(CurrentVertex + 2);
 
             AddVertex(frontVertex3, color1, topNormal);
             AddVertex(backVertex2, color2, topNormal);
             AddVertex(backVertex3, color3, topNormal);
-            AddIndex(CurrentVertex(false) + 0);
-            AddIndex(CurrentVertex(false) + 1);
-            AddIndex(CurrentVertex(false) + 2);
+            AddIndex(CurrentVertex + 0);
+            AddIndex(CurrentVertex + 1);
+            AddIndex(CurrentVertex + 2);
 
             InitializePrimitive(graphicsDevice);
         }
