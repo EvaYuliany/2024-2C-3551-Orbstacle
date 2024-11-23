@@ -18,6 +18,9 @@ public class TGCGame : Game {
   public const string ContentFolderSounds = "Sounds/";
   public const string ContentFolderSpriteFonts = "Font/";
   public const string ContentFolderTextures = "Textures/";
+
+  private GraphicsDeviceManager Graphics;
+
   public TGCGame() {
     Graphics = new GraphicsDeviceManager(this);
 
@@ -29,8 +32,6 @@ public class TGCGame : Game {
     Content.RootDirectory = "Content";
     IsMouseVisible = true;
   }
-
-  private GraphicsDeviceManager Graphics;
 
   private Effect NormalEffect;
   private Effect BlinnEffect;
@@ -179,6 +180,11 @@ public class TGCGame : Game {
   }
 
   protected override void LoadContent() {
+    FloorNormalMap =
+        Content.Load<Texture2D>(ContentFolderTextures + "tiling-normal");
+    FloorTexture =
+        Content.Load<Texture2D>(ContentFolderTextures + "tiling-base");
+
     SkyBoxEffect = Content.Load<Effect>(ContentFolderEffects + "SkyBox");
     SkyBoxModel = Content.Load<Model>(ContentFolder3D + "skybox/cube");
     SkyBoxTexture =
@@ -193,11 +199,6 @@ public class TGCGame : Game {
 
     NormalEffect =
         Content.Load<Effect>(ContentFolderEffects + ("NormalShade" + "r"));
-
-    FloorNormalMap =
-        Content.Load<Texture2D>(ContentFolderTextures + "tiling-normal");
-    FloorTexture =
-        Content.Load<Texture2D>(ContentFolderTextures + "tiling-base");
 
     Vector3 ambientColor = new Vector3(0.868f, 0.696f, 0.336f);
     Vector3 diffuseColor = new Vector3(1f, 0.182f, 0.157f);

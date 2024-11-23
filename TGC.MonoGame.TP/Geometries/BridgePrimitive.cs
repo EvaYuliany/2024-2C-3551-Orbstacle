@@ -70,15 +70,15 @@ namespace TGC.MonoGame.TP.Geometries
             for (var i = 0; i < tessellation - 2; i++)
                 if (normal.Y > 0)
                 {
-                    AddIndex(CurrentVertex);
-                    AddIndex(CurrentVertex + (i + 1) % tessellation);
-                    AddIndex(CurrentVertex + (i + 2) % tessellation);
+                    AddIndex(CurrentVertex(false));
+                    AddIndex(CurrentVertex(false) + (i + 1) % tessellation);
+                    AddIndex(CurrentVertex(false) + (i + 2) % tessellation);
                 }
                 else
                 {
-                    AddIndex(CurrentVertex);
-                    AddIndex(CurrentVertex + (i + 2) % tessellation);
-                    AddIndex(CurrentVertex + (i + 1) % tessellation);
+                    AddIndex(CurrentVertex(false));
+                    AddIndex(CurrentVertex(false) + (i + 2) % tessellation);
+                    AddIndex(CurrentVertex(false) + (i + 1) % tessellation);
                 }
 
             // Create cap vertices.

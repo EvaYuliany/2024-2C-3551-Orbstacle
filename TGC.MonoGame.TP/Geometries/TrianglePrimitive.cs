@@ -46,9 +46,9 @@ namespace TGC.MonoGame.TP.Geometries
         public TrianglePrimitive(GraphicsDevice graphicsDevice, Vector3 vertex1, Vector3 vertex2, Vector3 vertex3,
             Color vertexColor1, Color vertexColor2, Color vertexColor3)
         {
-            AddIndex(CurrentVertex + 0);
-            AddIndex(CurrentVertex + 1);
-            AddIndex(CurrentVertex + 2);
+            AddIndex(CurrentVertex(false) + 0);
+            AddIndex(CurrentVertex(false) + 1);
+            AddIndex(CurrentVertex(false) + 2);
 
             var normal = Vector3.Cross(vertex2 - vertex1, vertex3 - vertex2);
             normal.Normalize();

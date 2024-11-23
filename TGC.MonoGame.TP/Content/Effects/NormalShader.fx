@@ -64,20 +64,20 @@ float3 getNormalFromMap(float2 textureCoordinates, float3 worldPosition, float3 
 
 struct VertexShaderInput
 {
-  	float4 Position : POSITION0;
+	float4 Position : POSITION0;
     float4 Normal : NORMAL;
     float2 TextureCoordinates : TEXCOORD0;
 };
 
 struct VertexShaderOutput
 {
-  	float4 Position : SV_POSITION;
+	float4 Position : SV_POSITION;
     float2 TextureCoordinates : TEXCOORD0;
     float4 WorldPosition : TEXCOORD1;
     float4 Normal : TEXCOORD2;    
 };
 
-VertexShaderOutput NormalMapVS(in VertexShaderInput input)
+VertexShaderOutput MainVS(in VertexShaderInput input)
 {
     VertexShaderOutput output = (VertexShaderOutput) 0;
 
@@ -89,7 +89,7 @@ VertexShaderOutput NormalMapVS(in VertexShaderInput input)
     return output;
 }
 
-float4 NormalMapPS(VertexShaderOutput input) : COLOR
+float4 MainPS(VertexShaderOutput input) : COLOR
 {
     // Base vectors
     float3 lightDirection = normalize(lightPosition - input.WorldPosition.xyz);
@@ -109,16 +109,16 @@ float4 NormalMapPS(VertexShaderOutput input) : COLOR
     float3 specularLight = KSpecular * specularColor * pow(NdotH, shininess);
     
     // Final calculation
-     float4 finalColor = float4(saturate(ambientColor * KAmbient + diffuseLight) * texelColor.rgb + specularLight, texelColor.a);
+    float4 finalColor = float4(saturate(ambientColor * KAmbient + diffuseLight) * texelColor.rgb + specularLight, texelColor.a);
     return finalColor;
 
 }
 
-technique NormalMapping
+technique BasicColorDrawing
 {
     pass Pass0
     {
-        VertexShader = compile VS_SHADERMODEL NormalMapVS();
-        PixelShader = compile PS_SHADERMODEL NormalMapPS();
+        VertexShader = compile VS_SHADERMODEL MainVS();
+        PixelShader = compile PS_SHADERMODEL MainPS();
     }
 };
