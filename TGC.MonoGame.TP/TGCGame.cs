@@ -365,8 +365,7 @@ public class TGCGame : Game {
     SetShadowEffect(ShadowNormalEffect);
     SetShadowEffect(ShadowBlinnEffect);
 
-    DrawScene(gameTime, ShadowBlinnEffect, View, Projection);
-    FloorConstructor.Draw(ShadowNormalEffect, View, Projection);
+
     if (menu.IsActive) {
       menu.Draw(gameTime, player);
     } else {
@@ -377,15 +376,14 @@ public class TGCGame : Game {
           GraphicsDevice.SetRenderTarget(EnvironmentRenderTarget, face);
           GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer,
                                Color.Black, 1f, 0);
-
           SetCubemapCameraForOrientation(face);
           EnvironmentView = Matrix.CreateLookAt(
               player.Position, player.Position + EnvironmentFrontDirection,
               EnvironmentUpDirection);
 
-          DrawScene(gameTime, EnvironmentEffect, EnvironmentView,
+          DrawScene(gameTime, ShadowBlinnEffect, EnvironmentView,
                     EnvironmentProjection);
-          FloorConstructor.Draw(EnvironmentEffect, EnvironmentView,
+          FloorConstructor.Draw(ShadowNormalEffect, EnvironmentView,
                                 EnvironmentProjection);
         }
         GraphicsDevice.SetRenderTarget(null);
@@ -408,6 +406,8 @@ public class TGCGame : Game {
       }
       }
     }
+    DrawScene(gameTime, ShadowBlinnEffect, View, Projection);
+    FloorConstructor.Draw(ShadowNormalEffect, View, Projection);
   }
 
   private void SetCubemapCameraForOrientation(CubeMapFace face) {
