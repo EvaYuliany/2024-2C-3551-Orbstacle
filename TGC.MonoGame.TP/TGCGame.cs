@@ -36,7 +36,7 @@ public class TGCGame : Game {
   Vector3 ambientColor = new Vector3(0.868f, 0.696f, 0.336f);
   Vector3 diffuseColor = new Vector3(1f, 0.182f, 0.157f);
   Vector3 specularColor = Vector3.One;
-  Vector3 lightPosition = Vector3.UnitY * 500;
+  Vector3 lightPosition = Vector3.UnitY * 100;
 
   float kAmbient = 1f;
   float kDiffuse = 0.6f;
