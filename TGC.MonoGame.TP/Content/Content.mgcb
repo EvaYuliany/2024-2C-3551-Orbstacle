@@ -19,15 +19,13 @@
 /processorParam:DebugMode=Auto
 /build:Effects/BasicShader.fx
 
-#begin Effects/BlinnPhongShader.fx
+#begin Effects/ShadowBlinnShader.fx
 /importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/BlinnPhongShader.fx
+/build:Effects/ShadowBlinnShader.fx
 
-#begin Effects/NormalShader.fx
+#begin Effects/ShadowNormalShader.fx
 /importer:EffectImporter
-/build:Effects/NormalShader.fx
+/build:Effects/ShadowNormalShader.fx
 
 #begin Effects/EnvironmentShader.fx
 /importer:EffectImporter
@@ -38,12 +36,6 @@
 /processor:EffectProcessor
 /processorParam:DebugMode=Auto
 /build:Effects/PlayerShader.fx
-
-#begin Effects/ShadowMap.fx
-/importer:EffectImporter
-/processor:EffectProcessor
-/processorParam:DebugMode=Auto
-/build:Effects/ShadowMap.fx
 
 #begin Effects/SkyBox.fx
 /importer:EffectImporter

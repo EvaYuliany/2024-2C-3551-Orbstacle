@@ -32,13 +32,29 @@ public class TGCGame : Game {
     Content.RootDirectory = "Content";
     IsMouseVisible = true;
   }
-  private const int EnvironmentMapSize = 2048;
 
+  Vector3 ambientColor = new Vector3(0.868f, 0.696f, 0.336f);
+  Vector3 diffuseColor = new Vector3(1f, 0.182f, 0.157f);
+  Vector3 specularColor = Vector3.One;
+  Vector3 lightPosition = Vector3.UnitY * 500;
+
+  float kAmbient = 1f;
+  float kDiffuse = 0.6f;
+  float kSpecular = 0.8f;
+  float shininess = 16f;
+
+  Vector2 tiling = Vector2.One * 0.5f;
+
+  private const int EnvironmentMapSize = 2048;
   Vector3 EnvironmentUpDirection = Vector3.UnitY;
   Vector3 EnvironmentFrontDirection = Vector3.UnitX;
 
-  private Effect NormalEffect;
-  private Effect BlinnEffect;
+  private const int ShadowMapSize = 2048;
+  Vector3 ShadowUpDirection = Vector3.UnitX;
+  Vector3 ShadowFrontDirection = -Vector3.UnitY;
+
+  private Effect ShadowNormalEffect;
+  private Effect ShadowBlinnEffect;
   private Effect EnvironmentEffect;
 
   private Matrix View;
@@ -47,7 +63,13 @@ public class TGCGame : Game {
   private Matrix EnvironmentView;
   private Matrix EnvironmentProjection;
 
+  private Matrix ShadowView;
+  private Matrix ShadowProjection;
+
+  private FullScreenQuad fullScreenQuad;
+
   private RenderTargetCube EnvironmentRenderTarget;
+  private RenderTarget2D ShadowRenderTarget;
 
   private Menu menu;
 
@@ -112,15 +134,23 @@ public class TGCGame : Game {
     EnvironmentView = Matrix.CreateLookAt(
         player.Position, player.Position + EnvironmentFrontDirection,
         EnvironmentUpDirection);
+    ShadowView = Matrix.CreateLookAt(
+        lightPosition, lightPosition + ShadowFrontDirection, ShadowUpDirection);
 
     Projection = Matrix.CreatePerspectiveFieldOfView(
         MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 1500);
     EnvironmentProjection =
-        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 1f, 1500f);
+        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 1f, 3000f);
+    ShadowProjection =
+        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 5f, 3000f);
 
     EnvironmentRenderTarget = new RenderTargetCube(
         GraphicsDevice, EnvironmentMapSize, false, SurfaceFormat.Color,
         DepthFormat.Depth24, 0, RenderTargetUsage.DiscardContents);
+    ShadowRenderTarget =
+        new RenderTarget2D(GraphicsDevice, ShadowMapSize, ShadowMapSize, false,
+                           SurfaceFormat.Single, DepthFormat.Depth24, 0,
+                           RenderTargetUsage.PlatformContents);
 
     random = new Random(0);
     cubePositions = new List<Vector3>();
@@ -213,48 +243,18 @@ public class TGCGame : Game {
 
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
+    fullScreenQuad = new FullScreenQuad(GraphicsDevice);
 
-    BlinnEffect =
-        Content.Load<Effect>(ContentFolderEffects + "BlinnPhongShader");
-
-    NormalEffect =
-        Content.Load<Effect>(ContentFolderEffects + ("NormalShade" + "r"));
-
+    ShadowBlinnEffect =
+        Content.Load<Effect>(ContentFolderEffects + "ShadowBlinnShader");
+    ShadowNormalEffect =
+        Content.Load<Effect>(ContentFolderEffects + "ShadowNormalShader");
     EnvironmentEffect =
         Content.Load<Effect>(ContentFolderEffects + "EnvironmentShader");
 
-    Vector3 ambientColor = new Vector3(0.868f, 0.696f, 0.336f);
-    Vector3 diffuseColor = new Vector3(1f, 0.182f, 0.157f);
-    Vector3 specularColor = Vector3.One;
-    Vector3 lightPosition = Vector3.UnitY * 100;
-
-    float kAmbient = 1f;
-    float kDiffuse = 0.6f;
-    float kSpecular = 0.8f;
-    float shininess = 16f;
-
-    Vector2 tiling = Vector2.One * 0.5f;
-
-    BlinnEffect.Parameters["lightPosition"].SetValue(lightPosition);
-    BlinnEffect.Parameters["ambientColor"].SetValue(ambientColor);
-    BlinnEffect.Parameters["diffuseColor"].SetValue(diffuseColor);
-    BlinnEffect.Parameters["specularColor"].SetValue(specularColor);
-    BlinnEffect.Parameters["KAmbient"].SetValue(kAmbient);
-    BlinnEffect.Parameters["KDiffuse"].SetValue(kDiffuse);
-    BlinnEffect.Parameters["KSpecular"].SetValue(kSpecular);
-    BlinnEffect.Parameters["shininess"].SetValue(shininess);
-
-    NormalEffect.Parameters["lightPosition"].SetValue(lightPosition);
-    NormalEffect.Parameters["ambientColor"].SetValue(ambientColor);
-    NormalEffect.Parameters["diffuseColor"].SetValue(diffuseColor);
-    NormalEffect.Parameters["specularColor"].SetValue(specularColor);
-    NormalEffect.Parameters["KAmbient"].SetValue(kAmbient);
-    NormalEffect.Parameters["KDiffuse"].SetValue(kDiffuse);
-    NormalEffect.Parameters["KSpecular"].SetValue(kSpecular);
-    NormalEffect.Parameters["shininess"].SetValue(shininess);
-    NormalEffect.Parameters["Tiling"].SetValue(tiling);
-    NormalEffect.Parameters["NormalTexture"].SetValue(FloorNormalMap);
-    NormalEffect.Parameters["ModelTexture"].SetValue(FloorTexture);
+    SetBlinnEffect(ShadowBlinnEffect);
+    SetBlinnEffect(ShadowNormalEffect);
+    SetNormalEffect(ShadowNormalEffect);
 
     Song = Content.Load<Song>(ContentFolderSounds + "retro-2");
     MediaPlayer.IsRepeating = true;
@@ -284,9 +284,9 @@ public class TGCGame : Game {
       CameraMovement(dt, keyboardState);
     }
 
-    BlinnEffect.Parameters["eyePosition"].SetValue(
+    ShadowBlinnEffect.Parameters["eyePosition"].SetValue(
         GetCameraPosition(CameraAngle));
-    NormalEffect.Parameters["eyePosition"].SetValue(
+    ShadowNormalEffect.Parameters["eyePosition"].SetValue(
         GetCameraPosition(CameraAngle));
     EnvironmentEffect.Parameters["eyePosition"].SetValue(
         GetCameraPosition(CameraAngle));
@@ -298,18 +298,33 @@ public class TGCGame : Game {
     EnvironmentView = Matrix.CreateLookAt(
         player.Position, player.Position + EnvironmentFrontDirection,
         EnvironmentUpDirection);
+    ShadowView = Matrix.CreateLookAt(
+        lightPosition, lightPosition + ShadowFrontDirection, ShadowUpDirection);
   }
 
-  protected void DrawScene(GameTime gameTime, Matrix View, Matrix Projection) {
+  protected void DrawShadows(GameTime gameTime) {
+    GraphicsDevice.SetRenderTarget(ShadowRenderTarget);
+    GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer,
+                         Color.Black, 1f, 0);
 
-    pendulum.Draw(BlinnEffect, View, Projection);
-    FloorConstructor.Draw(NormalEffect, View, Projection);
-    powerup.Draw(BlinnEffect, View, Projection);
-    jpowerup.Draw(BlinnEffect, View, Projection);
-    check.Draw(BlinnEffect, View, Projection);
+    ShadowBlinnEffect.CurrentTechnique =
+        ShadowBlinnEffect.Techniques["DepthPass"];
+
+    DrawScene(gameTime, ShadowBlinnEffect, ShadowView, ShadowProjection);
+    ShadowBlinnEffect.Parameters["BaseColor"].SetValue(Color.White.ToVector3());
+    FloorConstructor.Draw(ShadowBlinnEffect, ShadowView, ShadowProjection);
+  }
+
+  protected void DrawScene(GameTime gameTime, Effect effect, Matrix View,
+                           Matrix Projection) {
+
+    pendulum.Draw(effect, View, Projection);
+    powerup.Draw(effect, View, Projection);
+    jpowerup.Draw(effect, View, Projection);
+    check.Draw(effect, View, Projection);
 
     foreach (var coin in coins) {
-      coin.Draw(BlinnEffect, View, Projection);
+      coin.Draw(effect, View, Projection);
 
       if (!menu.IsActive) {
         SkyBox.Draw(View, Projection, GetCameraPosition(CameraAngle));
@@ -317,9 +332,41 @@ public class TGCGame : Game {
     }
   }
 
+  protected void SetNormalEffect(Effect effect) {
+    effect.Parameters["NormalTexture"].SetValue(FloorNormalMap);
+    effect.Parameters["ModelTexture"].SetValue(FloorTexture);
+  }
+
+  protected void SetBlinnEffect(Effect effect) {
+    effect.Parameters["lightPosition"].SetValue(lightPosition);
+    effect.Parameters["ambientColor"].SetValue(ambientColor);
+    effect.Parameters["diffuseColor"].SetValue(diffuseColor);
+    effect.Parameters["specularColor"].SetValue(specularColor);
+    effect.Parameters["KAmbient"].SetValue(kAmbient);
+    effect.Parameters["KDiffuse"].SetValue(kDiffuse);
+    effect.Parameters["KSpecular"].SetValue(kSpecular);
+    effect.Parameters["shininess"].SetValue(shininess);
+  }
+
+  protected void SetShadowEffect(Effect effect) {
+    effect.CurrentTechnique = effect.Techniques["DrawShadowedPCF"];
+    effect.Parameters["shadowMap"].SetValue(ShadowRenderTarget);
+    effect.Parameters["lightPosition"].SetValue(lightPosition);
+    effect.Parameters["shadowMapSize"].SetValue(Vector2.One * ShadowMapSize);
+    effect.Parameters["LightViewProjection"].SetValue(ShadowView *
+                                                      ShadowProjection);
+  }
+
   protected override void Draw(GameTime gameTime) {
     GraphicsDevice.Clear(Color.Black);
 
+    DrawShadows(gameTime);
+    GraphicsDevice.SetRenderTarget(null);
+    SetShadowEffect(ShadowNormalEffect);
+    SetShadowEffect(ShadowBlinnEffect);
+
+    DrawScene(gameTime, ShadowBlinnEffect, View, Projection);
+    FloorConstructor.Draw(ShadowNormalEffect, View, Projection);
     if (menu.IsActive) {
       menu.Draw(gameTime, player);
     } else {
@@ -336,7 +383,10 @@ public class TGCGame : Game {
               player.Position, player.Position + EnvironmentFrontDirection,
               EnvironmentUpDirection);
 
-          DrawScene(gameTime, EnvironmentView, EnvironmentProjection);
+          DrawScene(gameTime, EnvironmentEffect, EnvironmentView,
+                    EnvironmentProjection);
+          FloorConstructor.Draw(EnvironmentEffect, EnvironmentView,
+                                EnvironmentProjection);
         }
         GraphicsDevice.SetRenderTarget(null);
         EnvironmentEffect.Parameters["environmentMap"].SetValue(
@@ -345,19 +395,19 @@ public class TGCGame : Game {
         break;
       }
       case Material.Plastic: {
-        BlinnEffect.Parameters["BaseColor"].SetValue(Color.Red.ToVector3());
-        player.Draw(BlinnEffect, View, Projection);
+        ShadowBlinnEffect.Parameters["BaseColor"].SetValue(
+            Color.Red.ToVector3());
+        player.Draw(ShadowBlinnEffect, View, Projection);
         break;
       }
       case Material.Rubber: {
-        BlinnEffect.Parameters["BaseColor"].SetValue(Color.Green.ToVector3());
-        player.Draw(BlinnEffect, View, Projection);
+        ShadowBlinnEffect.Parameters["BaseColor"].SetValue(
+            Color.Green.ToVector3());
+        player.Draw(ShadowBlinnEffect, View, Projection);
         break;
       }
       }
     }
-
-    DrawScene(gameTime, View, Projection);
   }
 
   private void SetCubemapCameraForOrientation(CubeMapFace face) {
