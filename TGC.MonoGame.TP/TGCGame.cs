@@ -454,6 +454,8 @@ public class TGCGame : Game {
           player.Draw(ShadowBlinnEffect, View, Projection);
           ShadowBlinnEffect.Parameters["KSpecular"].SetValue(kSpecular);
           break;
+
+          
         }
         }
       }
