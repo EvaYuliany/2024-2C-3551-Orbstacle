@@ -26,12 +26,13 @@ TGC, Tgcito  |  Apellido, Nombre
 
 ## Capturas
 
-![screenshot1](https://github.com/tgc-utn/tgc-monogame-tp/blob/master/TGC.MonoGame.TP/Icon.bmp)
-![screenshot2](https://github.com/tgc-utn/tgc-monogame-tp/blob/master/TGC.MonoGame.TP/Icon.bmp)
-![screenshot3](https://github.com/tgc-utn/tgc-monogame-tp/blob/master/TGC.MonoGame.TP/Icon.bmp)
-![screenshot4](https://github.com/tgc-utn/tgc-monogame-tp/blob/master/TGC.MonoGame.TP/Icon.bmp)
-![screenshot5](https://github.com/tgc-utn/tgc-monogame-tp/blob/master/TGC.MonoGame.TP/Icon.bmp)
+(![image](https://github.com/user-attachments/assets/1ca1f132-ddef-4e73-a65f-02122f4d2958)
+![image](https://github.com/user-attachments/assets/d66f2608-06be-4a95-b026-b69c7066ac64)
+![image](https://github.com/user-attachments/assets/cf95dd86-9ca4-4195-8a05-8f681e204c5d)
+![image](https://github.com/user-attachments/assets/d08c3fa8-5bfe-4fcc-af56-f2ef47737a33)
+![image](https://github.com/user-attachments/assets/ee21d7f4-df02-4229-9853-8609498dd292)
+
 
 ## Game Play
 
-[![Watch the video](https://img.youtube.com/vi/pgEwUC0jvH4/0.jpg)](https://www.youtube.com/playlist?list=PLRM4L32DjvnazuMl8wZlbpEYL5Qh63ulG)
+![Link al video](https://drive.google.com/file/d/1p-P2WzeunkpAuJBbWJtTMVwBg_p_6PO7/view?usp=sharing)
