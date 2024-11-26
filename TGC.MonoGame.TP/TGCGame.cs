@@ -139,9 +139,9 @@ public class TGCGame : Game {
     Projection = Matrix.CreatePerspectiveFieldOfView(
         MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 1500);
     EnvironmentProjection =
-        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 1f, 500);
+        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 1f, 3000);
     ShadowProjection =
-        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 5f, 500);
+        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 5f, 1500);
 
     EnvironmentRenderTarget = new RenderTargetCube(
         GraphicsDevice, EnvironmentMapSize, false, SurfaceFormat.Color,
