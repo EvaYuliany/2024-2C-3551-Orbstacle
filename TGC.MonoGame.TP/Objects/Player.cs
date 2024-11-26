@@ -150,7 +150,9 @@ public class Player : IDisposable {
       break;
     }
   }
-
+   public bool IntersectsFrustum(BoundingFrustum frustum) {
+        return frustum.Intersects(BoundingSphere);
+  }
   public void Dispose() { Model.Dispose(); }
 }
 }

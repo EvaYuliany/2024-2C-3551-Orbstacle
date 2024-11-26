@@ -95,9 +95,13 @@ public class FloorConstructor : IDisposable {
     return translation + Vector3.UnitY * FloorThickness * FloorUnit / 2;
   }
 
-  public void Draw(Effect Effect, Matrix View, Matrix Projection) {
+  public void Draw(Effect Effect, Matrix View, Matrix Projection, BoundingFrustum frustum) {
+    
     for (int i = 0; i < Floors.Count; i++) {
-      Floors[i].Draw(Effect, View, Projection);
+        if( Floors[i].IntersectsFrustum(frustum)){
+
+          Floors[i].Draw(Effect, View, Projection);
+        }
     }
   }
 
