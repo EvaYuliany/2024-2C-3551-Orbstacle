@@ -20,6 +20,7 @@ public class Pendulum : IDisposable {
   private float BallRadius;
 
   public Vector3 Position;
+  public Vector3 Direction;
   public float RotationAngle;
   private float AngleOffset;
 
@@ -44,6 +45,8 @@ public class Pendulum : IDisposable {
     MaxAngle = max_angle;
     MinAngle = min_angle;
     Speed = speed;
+    Direction = Vector3.Normalize(
+        new Vector3(MathF.Cos(-RotationAngle), 0, MathF.Sin(-RotationAngle)));
 
     Matrix Translation =
         Matrix.CreateTranslation(-Vector3.UnitY * RodLength / 2) *
@@ -57,7 +60,7 @@ public class Pendulum : IDisposable {
     RodWorld = Matrix.CreateScale(new Vector3(1, RodLength, 1)) * Translation;
 
     SphereCenter = Vector3.Transform(Vector3.Zero, BallWorld);
-    BoundingSphere = new BoundingSphere(SphereCenter, BallRadius/2);
+    BoundingSphere = new BoundingSphere(SphereCenter, BallRadius / 2);
   }
 
   public void Update(float dt) {
@@ -79,17 +82,17 @@ public class Pendulum : IDisposable {
     RodWorld = Matrix.CreateScale(new Vector3(1, RodLength, 1)) * Translation;
 
     SphereCenter = Vector3.Transform(Vector3.Zero, BallWorld);
-    BoundingSphere = new BoundingSphere(SphereCenter, BallRadius/2);
+    BoundingSphere = new BoundingSphere(SphereCenter, BallRadius / 2);
   }
 
   public bool Intersects(BoundingSphere m) {
     return BoundingSphere.Intersects(m);
   }
-   public bool IntersectsFrustum(BoundingFrustum frustum) {
-        return frustum.Intersects(BoundingSphere);
+  public bool IntersectsFrustum(BoundingFrustum frustum) {
+    return frustum.Intersects(BoundingSphere);
   }
 
-  public void Draw(Effect Effect,Matrix View,Matrix Projection) {
+  public void Draw(Effect Effect, Matrix View, Matrix Projection) {
     Effect.Parameters["BaseColor"].SetValue(RodColor.ToVector3());
     Effect.Parameters["InverseTransposeWorld"].SetValue(
         Matrix.Transpose(Matrix.Invert(RodWorld)));
@@ -105,7 +108,6 @@ public class Pendulum : IDisposable {
                                                       Projection);
     Effect.Parameters["World"].SetValue(BallWorld);
     BallModel.Draw(Effect);
-
   }
 
   public void Dispose() {

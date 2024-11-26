@@ -103,8 +103,9 @@ public class TGCGame : Game {
   private CubePrimitive Cube;
   private FloorConstructor FloorConstructor;
 
-  private Pendulum pendulum;
-  private Checkpoint check;
+  private List<Pendulum> pendulums;
+  private List<Checkpoint> checks;
+  private int LastCheck = -1;
   private SpeedPowerUp powerup;
   private JumpBoostPowerUp jpowerup;
   private List<Coin> coins;
@@ -183,11 +184,9 @@ public class TGCGame : Game {
 
     powerup = new SpeedPowerUp(GraphicsDevice, Vector3.UnitY, 2.5f);
     jpowerup = new JumpBoostPowerUp(GraphicsDevice, Vector3.UnitY, 1.2f);
-    check = new Checkpoint(GraphicsDevice, Vector3.Zero, 7, 5000);
+    checks = new List<Checkpoint>();
     coins = new List<Coin>();
-    pendulum = new Pendulum(GraphicsDevice, Vector3.UnitY * 20, 0, MathF.PI / 2,
-                            MathF.PI / 2, -MathF.PI / 2, 15, 10, Color.Red,
-                            Color.Blue, 1);
+    pendulums = new List<Pendulum>();
 
     FloorConstructor = new FloorConstructor(GraphicsDevice);
     (int, Vector2,
@@ -220,10 +219,31 @@ public class TGCGame : Game {
       }
     }
 
+    (int, float, float,
+     float)[] pendulumsProps = { (4, 0, 1, MathF.PI / 2),
+                                 (15, MathF.PI / 2, 1.3f, MathF.PI / 2),
+                                 (16, MathF.PI / 2, 1.5f, -MathF.PI / 2),
+                                 (17, MathF.PI / 2, 1.3f, MathF.PI / 2),
+                                 (20, 0, 2, MathF.PI / 2),
+                                 (22, MathF.PI / 2, 1, MathF.PI / 2) };
+    foreach (var (i, rotation, speed, starting_offset) in pendulumsProps) {
+      Vector3 trackPosition = TrackPositions[i];
+      pendulums.Add(new Pendulum(GraphicsDevice,
+                                 trackPosition + Vector3.UnitY * 20, rotation,
+                                 starting_offset, MathF.PI / 2, -MathF.PI / 2,
+                                 15, 10, Color.Red, Color.Blue, speed));
+    }
+
     powerup.Position += TrackPositions[2];
     jpowerup.Position += TrackPositions[3];
-    pendulum.Position += TrackPositions[4];
-    check.Position += TrackPositions[6] + Vector3.UnitY * 0.5f;
+
+    int[] checkpointProps = { 6, 14 };
+
+    foreach (int i in checkpointProps) {
+      checks.Add(new Checkpoint(
+          GraphicsDevice, TrackPositions[i] + Vector3.UnitY * 0.5f, 5, 5000));
+    }
+
     BoundingFrustum = new BoundingFrustum(View * Projection);
     menu.Initialize();
     base.Initialize();
@@ -274,7 +294,10 @@ public class TGCGame : Game {
 
     if (!menu.IsActive)
       player.Update(dt, keyboardState, CameraAngle);
-    pendulum.Update(dt);
+
+    for (int i = 0; i < pendulums.Count; i++) {
+      pendulums[i].Update(dt);
+    }
     for (int i = 0; i < coins.Count; i++) {
       coins[i].Update(dt);
     }
@@ -299,7 +322,7 @@ public class TGCGame : Game {
         EnvironmentUpDirection);
     ShadowView = Matrix.CreateLookAt(
         lightPosition, lightPosition + ShadowFrontDirection, ShadowUpDirection);
-     BoundingFrustum.Matrix = View * Projection;
+    BoundingFrustum.Matrix = View * Projection;
   }
 
   protected void DrawShadows(GameTime gameTime) {
@@ -312,28 +335,33 @@ public class TGCGame : Game {
 
     DrawScene(gameTime, ShadowBlinnEffect, ShadowView, ShadowProjection);
     ShadowBlinnEffect.Parameters["BaseColor"].SetValue(Color.White.ToVector3());
-    FloorConstructor.Draw(ShadowBlinnEffect, ShadowView, ShadowProjection, BoundingFrustum);
+    FloorConstructor.Draw(ShadowBlinnEffect, ShadowView, ShadowProjection,
+                          BoundingFrustum);
   }
 
   protected void DrawScene(GameTime gameTime, Effect effect, Matrix View,
                            Matrix Projection) {
 
-    if (pendulum.IntersectsFrustum(BoundingFrustum)){
-        pendulum.Draw(effect, View, Projection);
-    }
     powerup.Draw(effect, View, Projection);
     jpowerup.Draw(effect, View, Projection);
-    check.Draw(effect, View, Projection);
+    foreach (var check in checks) {
+      check.Draw(effect, View, Projection);
+    }
+
+    foreach (var pendulum in pendulums) {
+      if (pendulum.IntersectsFrustum(BoundingFrustum)) {
+        pendulum.Draw(effect, View, Projection);
+      }
+    }
 
     foreach (var coin in coins) {
-      
-      if (coin.IntersectsFrustum(BoundingFrustum)){
-        coin.Draw(effect, View, Projection);     
+      if (coin.IntersectsFrustum(BoundingFrustum)) {
+        coin.Draw(effect, View, Projection);
       }
+    }
 
-      if (!menu.IsActive) {
-        SkyBox.Draw(View, Projection, GetCameraPosition(CameraAngle));
-      }
+    if (!menu.IsActive) {
+      SkyBox.Draw(View, Projection, GetCameraPosition(CameraAngle));
     }
   }
 
@@ -374,15 +402,15 @@ public class TGCGame : Game {
       menu.Draw(gameTime, player);
     } else {
 
-       if (player.IntersectsFrustum(BoundingFrustum)) {
-        
+      if (player.IntersectsFrustum(BoundingFrustum)) {
+
         switch (player.Material) {
         case Material.Metal: {
           for (var face = CubeMapFace.PositiveX; face <= CubeMapFace.NegativeZ;
-              face++) {
+               face++) {
             GraphicsDevice.SetRenderTarget(EnvironmentRenderTarget, face);
             GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer,
-                                Color.Black, 1f, 0);
+                                 Color.Black, 1f, 0);
             SetCubemapCameraForOrientation(face);
             EnvironmentView = Matrix.CreateLookAt(
                 player.Position, player.Position + EnvironmentFrontDirection,
@@ -411,13 +439,12 @@ public class TGCGame : Game {
           player.Draw(ShadowBlinnEffect, View, Projection);
           break;
         }
+        }
       }
-      
-      }
-
     }
     DrawScene(gameTime, ShadowBlinnEffect, View, Projection);
-    FloorConstructor.Draw(ShadowNormalEffect, View, Projection, BoundingFrustum);
+    FloorConstructor.Draw(ShadowNormalEffect, View, Projection,
+                          BoundingFrustum);
   }
 
   private void SetCubemapCameraForOrientation(CubeMapFace face) {
@@ -482,13 +509,20 @@ public class TGCGame : Game {
       }
     }
 
-    if (pendulum.Intersects(player.BoundingSphere)) {
-      player.Velocity += Vector3.UnitX * pendulum.Speed * 3;
+    for (int i = 0; i < pendulums.Count; i++) {
+      if (pendulums[i].Intersects(player.BoundingSphere)) {
+        player.Velocity += pendulums[i].Direction * pendulums[i].Speed * 3;
+      }
     }
 
-    if (check.Intersects(player.BoundingSphere)) {
-      PlayerInitialPos = check.Position;
-      check.Dispose();
+    for (int i = 0; i < checks.Count; i++) {
+      if (checks[i].Intersects(player.BoundingSphere)) {
+        checks[i].Dispose();
+        if (i > LastCheck) {
+          PlayerInitialPos = checks[i].Position;
+          LastCheck = i;
+        }
+      }
     }
 
     (bool PlayerIntersectsFloor, bool isSlope, Floor IntersectingFloor) =
