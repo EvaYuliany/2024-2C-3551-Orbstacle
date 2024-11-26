@@ -20,7 +20,7 @@ Los recursos usados se almacenan utilizando [Git LFS](https://git-lfs.github.com
 
 ## Integrantes
 
-|  Apellido, Nombre | Legajo
+|  Apellido| Nombre| Legajo |
 ------------ | -------------  | ------------- |
 | Tomas Sanchez Negrette | | 1757623 |
 | Eva Yuliany Mora Viamonte | 1753277 |
