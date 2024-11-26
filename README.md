@@ -20,9 +20,11 @@ Los recursos usados se almacenan utilizando [Git LFS](https://git-lfs.github.com
 
 ## Integrantes
 
-TGC, Tgcito  |  Apellido, Nombre
------------- | -------------
-| <img src="https://github.com/tgc-utn/tgc-utn.github.io/blob/master/images/robotgc.png" height="500"> | <img src="https://github.com/tgc-utn/tgc-utn.github.io/blob/master/images/trofeotp.png" height="500"> |
+|  Apellido, Nombre | Legajo
+------------ | -------------  |
+| Tomas Sanchez Negrette | | 1757623 |
+| Eva Yuliany Mora Viamonte | 1753277 |
+| Ramiro Villani | 2041595 |
 
 ## Capturas
 
