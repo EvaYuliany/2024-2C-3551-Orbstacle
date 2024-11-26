@@ -28,7 +28,7 @@ Los recursos usados se almacenan utilizando [Git LFS](https://git-lfs.github.com
 
 ## Capturas
 
-(![image](https://github.com/user-attachments/assets/1ca1f132-ddef-4e73-a65f-02122f4d2958)
+![image](https://github.com/user-attachments/assets/1ca1f132-ddef-4e73-a65f-02122f4d2958)
 ![image](https://github.com/user-attachments/assets/d66f2608-06be-4a95-b026-b69c7066ac64)
 ![image](https://github.com/user-attachments/assets/cf95dd86-9ca4-4195-8a05-8f681e204c5d)
 ![image](https://github.com/user-attachments/assets/d08c3fa8-5bfe-4fcc-af56-f2ef47737a33)
