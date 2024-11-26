@@ -66,8 +66,6 @@ public class TGCGame : Game {
   private Matrix ShadowView;
   private Matrix ShadowProjection;
 
-  private FullScreenQuad fullScreenQuad;
-
   private RenderTargetCube EnvironmentRenderTarget;
   private RenderTarget2D ShadowRenderTarget;
 
@@ -243,7 +241,6 @@ public class TGCGame : Game {
 
     Sphere = new SpherePrimitive(GraphicsDevice);
     Cube = new CubePrimitive(GraphicsDevice);
-    fullScreenQuad = new FullScreenQuad(GraphicsDevice);
 
     ShadowBlinnEffect =
         Content.Load<Effect>(ContentFolderEffects + "ShadowBlinnShader");
@@ -365,7 +362,6 @@ public class TGCGame : Game {
     SetShadowEffect(ShadowNormalEffect);
     SetShadowEffect(ShadowBlinnEffect);
 
-
     if (menu.IsActive) {
       menu.Draw(gameTime, player);
     } else {
@@ -481,7 +477,7 @@ public class TGCGame : Game {
       check.Dispose();
     }
 
-    (bool PlayerIntersectsFloor, Floor IntersectingFloor) =
+    (bool PlayerIntersectsFloor, bool isSlope, Floor IntersectingFloor) =
         FloorConstructor.Intersects(player.BoundingSphere);
     if (PlayerIntersectsFloor) {
       if (keyboardState.IsKeyDown(Keys.Space)) {
@@ -489,17 +485,22 @@ public class TGCGame : Game {
       }
 
       if (player.Velocity.Y < 0) {
-        player.Velocity =
-            Vector3.Reflect(player.Velocity * player.RestitutionCoeficient,
-                            IntersectingFloor.Normal);
+        if (player.Velocity.Y > 2)
+          player.Velocity.Y = 0;
+        else
+          player.Velocity =
+              Vector3.Reflect(player.Velocity * player.RestitutionCoeficient,
+                              IntersectingFloor.Normal);
       }
 
       if (player.Velocity.Y >= 0) {
-        player.Velocity += Vector3.UnitY * player.RestitutionCoeficient;
-        Vector3 grav = -20 * Gravity * Vector3.UnitY;
-        Vector3 acc = grav - (Vector3.Dot(IntersectingFloor.Normal, grav) *
-                              IntersectingFloor.Normal);
-        player.Velocity += acc * dt;
+        if (isSlope) {
+          player.Velocity += Vector3.UnitY * player.RestitutionCoeficient;
+          Vector3 grav = -20 * Gravity * Vector3.UnitY;
+          Vector3 acc = grav - (Vector3.Dot(IntersectingFloor.Normal, grav) *
+                                IntersectingFloor.Normal);
+          player.Velocity += acc * dt;
+        }
       }
 
     } else {

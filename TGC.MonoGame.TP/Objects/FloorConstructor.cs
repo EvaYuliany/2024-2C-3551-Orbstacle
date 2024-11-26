@@ -13,8 +13,8 @@ public class FloorConstructor : IDisposable {
   private List<Floor> Floors = new List<Floor>();
   private List<bool> Slopes = new List<bool>();
 
-  private float FloorUnit = 30;
-  private float FloorThickness = 0.2f;
+  private float FloorUnit = 25;
+  private float FloorThickness = 0.1f;
 
   private static float FloorInitialHeight = -10;
   private Vector3 FloorInitialPos = Vector3.Zero;
@@ -101,14 +101,14 @@ public class FloorConstructor : IDisposable {
     }
   }
 
-  public (bool, Floor) Intersects(BoundingSphere m) {
+  public (bool, bool, Floor) Intersects(BoundingSphere m) {
     int intersecting_floor = Floors.FindIndex((b) => b.Intersects(m));
     if (intersecting_floor == -1)
-      return (false, null);
+      return (false, false, null);
 
     Floor intersectingFloor = Floors[intersecting_floor];
 
-    return (true, intersectingFloor);
+    return (true, Slopes[intersecting_floor], intersectingFloor);
   }
 
   public void Dispose() { Cube.Dispose(); }
