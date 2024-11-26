@@ -450,7 +450,9 @@ public class TGCGame : Game {
         case Material.Rubber: {
           ShadowBlinnEffect.Parameters["BaseColor"].SetValue(
               Color.Green.ToVector3());
+          ShadowBlinnEffect.Parameters["KSpecular"].SetValue(0);
           player.Draw(ShadowBlinnEffect, View, Projection);
+          ShadowBlinnEffect.Parameters["KSpecular"].SetValue(kSpecular);
           break;
         }
         }
