@@ -85,6 +85,9 @@ public class Pendulum : IDisposable {
   public bool Intersects(BoundingSphere m) {
     return BoundingSphere.Intersects(m);
   }
+   public bool IntersectsFrustum(BoundingFrustum frustum) {
+        return frustum.Intersects(BoundingSphere);
+  }
 
   public void Draw(Effect Effect,Matrix View,Matrix Projection) {
     Effect.Parameters["BaseColor"].SetValue(RodColor.ToVector3());

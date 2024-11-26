@@ -51,10 +51,15 @@ public class Floor : IDisposable {
                                                       Projection);
     Effect.Parameters["World"].SetValue(worldMatrix);
     Cube.Draw(Effect);
+    
   }
 
   public bool Intersects(BoundingSphere m) { return BoundingBox.Intersects(m); }
+  public bool IntersectsFrustum(BoundingFrustum frustum) {
+        Vector3 bb = Scale * 0.5f;
 
+        return frustum.Intersects( new BoundingBox(Translation - bb, Translation + bb));
+  }
   public void Dispose() { Cube.Dispose(); }
 }
 }

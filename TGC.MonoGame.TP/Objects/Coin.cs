@@ -48,6 +48,10 @@ public class Coin : IDisposable {
     Model.Draw(Effect);
   }
 
+  public bool IntersectsFrustum(BoundingFrustum frustum) {
+        BoundingSphere boundingSphere = new BoundingSphere(Position, Radius);
+        return frustum.Intersects(boundingSphere);
+  }
   public bool Intersects(BoundingSphere m) { return bb.Intersects(m); }
 
   public void Dispose() { Model.Dispose(); }

@@ -119,6 +119,7 @@ public class TGCGame : Game {
   private Song Song { get; set; }
   private Texture2D FloorNormalMap { get; set; }
   private Texture2D FloorTexture { get; set; }
+  private BoundingFrustum BoundingFrustum { get; set; }
 
   protected override void Initialize() {
     menu = new Menu(this);
@@ -140,9 +141,9 @@ public class TGCGame : Game {
     Projection = Matrix.CreatePerspectiveFieldOfView(
         MathHelper.PiOver4, GraphicsDevice.Viewport.AspectRatio, 1, 1500);
     EnvironmentProjection =
-        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 1f, 3000f);
+        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 1f, 500);
     ShadowProjection =
-        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 5f, 3000f);
+        Matrix.CreatePerspectiveFieldOfView(MathHelper.PiOver2, 1f, 5f, 500);
 
     EnvironmentRenderTarget = new RenderTargetCube(
         GraphicsDevice, EnvironmentMapSize, false, SurfaceFormat.Color,
@@ -225,6 +226,7 @@ public class TGCGame : Game {
     jpowerup.Position += TrackPositions[3];
     pendulum.Position += TrackPositions[4];
     check.Position += TrackPositions[6] + Vector3.UnitY * 0.5f;
+    BoundingFrustum = new BoundingFrustum(View * Projection);
     menu.Initialize();
     base.Initialize();
   }
@@ -300,6 +302,7 @@ public class TGCGame : Game {
         EnvironmentUpDirection);
     ShadowView = Matrix.CreateLookAt(
         lightPosition, lightPosition + ShadowFrontDirection, ShadowUpDirection);
+     BoundingFrustum.Matrix = View * Projection;
   }
 
   protected void DrawShadows(GameTime gameTime) {
@@ -312,19 +315,24 @@ public class TGCGame : Game {
 
     DrawScene(gameTime, ShadowBlinnEffect, ShadowView, ShadowProjection);
     ShadowBlinnEffect.Parameters["BaseColor"].SetValue(Color.White.ToVector3());
-    FloorConstructor.Draw(ShadowBlinnEffect, ShadowView, ShadowProjection);
+    FloorConstructor.Draw(ShadowBlinnEffect, ShadowView, ShadowProjection, BoundingFrustum);
   }
 
   protected void DrawScene(GameTime gameTime, Effect effect, Matrix View,
                            Matrix Projection) {
 
-    pendulum.Draw(effect, View, Projection);
+    if (pendulum.IntersectsFrustum(BoundingFrustum)){
+        pendulum.Draw(effect, View, Projection);
+    }
     powerup.Draw(effect, View, Projection);
     jpowerup.Draw(effect, View, Projection);
     check.Draw(effect, View, Projection);
 
     foreach (var coin in coins) {
-      coin.Draw(effect, View, Projection);
+      
+      if (coin.IntersectsFrustum(BoundingFrustum)){
+        coin.Draw(effect, View, Projection);     
+      }
 
       if (!menu.IsActive) {
         SkyBox.Draw(View, Projection, GetCameraPosition(CameraAngle));
@@ -369,45 +377,51 @@ public class TGCGame : Game {
     if (menu.IsActive) {
       menu.Draw(gameTime, player);
     } else {
-      switch (player.Material) {
-      case Material.Metal: {
-        for (var face = CubeMapFace.PositiveX; face <= CubeMapFace.NegativeZ;
-             face++) {
-          GraphicsDevice.SetRenderTarget(EnvironmentRenderTarget, face);
-          GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer,
-                               Color.Black, 1f, 0);
-          SetCubemapCameraForOrientation(face);
-          EnvironmentView = Matrix.CreateLookAt(
-              player.Position, player.Position + EnvironmentFrontDirection,
-              EnvironmentUpDirection);
 
-          DrawScene(gameTime, ShadowBlinnEffect, EnvironmentView,
-                    EnvironmentProjection);
-          FloorConstructor.Draw(ShadowNormalEffect, EnvironmentView,
-                                EnvironmentProjection);
+       if (player.IntersectsFrustum(BoundingFrustum)) {
+        
+        switch (player.Material) {
+        case Material.Metal: {
+          for (var face = CubeMapFace.PositiveX; face <= CubeMapFace.NegativeZ;
+              face++) {
+            GraphicsDevice.SetRenderTarget(EnvironmentRenderTarget, face);
+            GraphicsDevice.Clear(ClearOptions.Target | ClearOptions.DepthBuffer,
+                                Color.Black, 1f, 0);
+            SetCubemapCameraForOrientation(face);
+            EnvironmentView = Matrix.CreateLookAt(
+                player.Position, player.Position + EnvironmentFrontDirection,
+                EnvironmentUpDirection);
+
+            DrawScene(gameTime, ShadowBlinnEffect, EnvironmentView,
+                      EnvironmentProjection);
+            FloorConstructor.Draw(ShadowNormalEffect, EnvironmentView,
+                                  EnvironmentProjection, BoundingFrustum);
+          }
+          GraphicsDevice.SetRenderTarget(null);
+          EnvironmentEffect.Parameters["environmentMap"].SetValue(
+              EnvironmentRenderTarget);
+          player.Draw(EnvironmentEffect, View, Projection);
+          break;
         }
-        GraphicsDevice.SetRenderTarget(null);
-        EnvironmentEffect.Parameters["environmentMap"].SetValue(
-            EnvironmentRenderTarget);
-        player.Draw(EnvironmentEffect, View, Projection);
-        break;
+        case Material.Plastic: {
+          ShadowBlinnEffect.Parameters["BaseColor"].SetValue(
+              Color.Red.ToVector3());
+          player.Draw(ShadowBlinnEffect, View, Projection);
+          break;
+        }
+        case Material.Rubber: {
+          ShadowBlinnEffect.Parameters["BaseColor"].SetValue(
+              Color.Green.ToVector3());
+          player.Draw(ShadowBlinnEffect, View, Projection);
+          break;
+        }
       }
-      case Material.Plastic: {
-        ShadowBlinnEffect.Parameters["BaseColor"].SetValue(
-            Color.Red.ToVector3());
-        player.Draw(ShadowBlinnEffect, View, Projection);
-        break;
+      
       }
-      case Material.Rubber: {
-        ShadowBlinnEffect.Parameters["BaseColor"].SetValue(
-            Color.Green.ToVector3());
-        player.Draw(ShadowBlinnEffect, View, Projection);
-        break;
-      }
-      }
+
     }
     DrawScene(gameTime, ShadowBlinnEffect, View, Projection);
-    FloorConstructor.Draw(ShadowNormalEffect, View, Projection);
+    FloorConstructor.Draw(ShadowNormalEffect, View, Projection, BoundingFrustum);
   }
 
   private void SetCubemapCameraForOrientation(CubeMapFace face) {
