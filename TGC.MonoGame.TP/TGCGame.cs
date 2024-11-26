@@ -106,8 +106,8 @@ public class TGCGame : Game {
   private List<Pendulum> pendulums;
   private List<Checkpoint> checks;
   private int LastCheck = -1;
-  private SpeedPowerUp powerup;
-  private JumpBoostPowerUp jpowerup;
+  private List<SpeedPowerUp> sPowers;
+  private List<JumpBoostPowerUp> jPowers;
   private List<Coin> coins;
 
   private SkyBox SkyBox { get; set; }
@@ -182,8 +182,8 @@ public class TGCGame : Game {
       sphereColors.Add(randomColor);
     }
 
-    powerup = new SpeedPowerUp(GraphicsDevice, Vector3.UnitY, 2.5f);
-    jpowerup = new JumpBoostPowerUp(GraphicsDevice, Vector3.UnitY, 1.2f);
+    sPowers = new List<SpeedPowerUp>();
+    jPowers = new List<JumpBoostPowerUp>();
     checks = new List<Checkpoint>();
     coins = new List<Coin>();
     pendulums = new List<Pendulum>();
@@ -215,6 +215,17 @@ public class TGCGame : Game {
       } else {
         Vector3 center = FloorConstructor.AddBase(offset);
         coins.Add(new Coin(GraphicsDevice, center + Vector3.UnitY * 1.2f));
+        if (i % 2 == 0) {
+          bool coinflip = random.NextDouble() > 0.5f;
+          float x = (float)(random.NextDouble() * 40) - 20;
+          float z = (float)(random.NextDouble() * 40) - 20;
+          Vector3 pos = new Vector3(x, 1, z) + center;
+          if (coinflip) {
+            sPowers.Add(new SpeedPowerUp(GraphicsDevice, pos, 2.5f));
+          } else {
+            jPowers.Add(new JumpBoostPowerUp(GraphicsDevice, pos, 1.2f));
+          }
+        }
         TrackPositions.Add(center);
       }
     }
@@ -233,9 +244,6 @@ public class TGCGame : Game {
                                  starting_offset, MathF.PI / 2, -MathF.PI / 2,
                                  15, 10, Color.Red, Color.Blue, speed));
     }
-
-    powerup.Position += TrackPositions[2];
-    jpowerup.Position += TrackPositions[3];
 
     int[] checkpointProps = { 6, 14 };
 
@@ -342,8 +350,14 @@ public class TGCGame : Game {
   protected void DrawScene(GameTime gameTime, Effect effect, Matrix View,
                            Matrix Projection) {
 
-    powerup.Draw(effect, View, Projection);
-    jpowerup.Draw(effect, View, Projection);
+    foreach (var spower in sPowers) {
+      spower.Draw(effect, View, Projection);
+    }
+
+    foreach (var jpower in jPowers) {
+      jpower.Draw(effect, View, Projection);
+    }
+
     foreach (var check in checks) {
       check.Draw(effect, View, Projection);
     }
@@ -498,8 +512,13 @@ public class TGCGame : Game {
 
   public void CheckCollisions(float dt, KeyboardState keyboardState,
                               GameTime gameTime) {
-    powerup.CheckCollision(player, gameTime);
-    jpowerup.CheckCollision(player, gameTime);
+    foreach (var spower in sPowers) {
+      spower.CheckCollision(player, gameTime);
+    }
+
+    foreach (var jpower in jPowers) {
+      jpower.CheckCollision(player, gameTime);
+    }
 
     for (int i = 0; i < coins.Count; i++) {
       if (coins[i].Intersects(player.BoundingSphere)) {
