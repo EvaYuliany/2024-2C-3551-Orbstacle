@@ -20,11 +20,11 @@ Los recursos usados se almacenan utilizando [Git LFS](https://git-lfs.github.com
 
 ## Integrantes
 
-|  Apellido| Nombre| Legajo |
------------- | -------------  | ------------- |
-| Tomas Sanchez Negrette | | 1757623 |
-| Eva Yuliany Mora Viamonte | 1753277 |
-| Ramiro Villani | 2041595 |
+| Foto |  Apellidoy  Nombre | Legajo |
+| ------------ | -------------  | ------------- |
+| not found | Tomas Sanchez Negrette | 1757623 |
+| <img src="https://github.com/user-attachments/assets/ff101393-04e3-4aa9-a41c-e73107000945" width="75" height="100"/> | Eva Yuliany Mora Viamonte | 1753277 |
+| <img src="https://github.com/user-attachments/assets/bfe17260-5afe-4f39-a5c9-1ba3d500bf99" width="75" height="100"/>  | Ramiro Villani | 2041595 |
 
 ## Capturas
 
