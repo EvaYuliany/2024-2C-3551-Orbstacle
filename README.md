@@ -36,5 +36,5 @@ Los recursos usados se almacenan utilizando [Git LFS](https://git-lfs.github.com
 
 
 ## Game Play
+<p><a href="https://drive.google.com/file/d/1p-P2WzeunkpAuJBbWJtTMVwBg_p_6PO7/view?usp=sharing">Llink al video</a> 
 
-![Link al video](https://drive.google.com/file/d/1p-P2WzeunkpAuJBbWJtTMVwBg_p_6PO7/view?usp=sharing)
